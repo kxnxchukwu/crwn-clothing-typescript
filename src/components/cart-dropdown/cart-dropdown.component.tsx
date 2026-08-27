@@ -1,7 +1,7 @@
 import React, { ReactElement } from "react";
 import CartItem from "../cart-item/cart-item.component";
 import { useSelector, useDispatch } from "react-redux";
-import { selectCartItems, toggleCartHidden } from "../../features/cart-slice";
+import { selectCartItems, toggleCartHidden, selectCardHidden } from "../../features/cart-slice";
 import { useNavigate } from "react-router-dom";
 import Button from "../button/button.component";
 
@@ -11,10 +11,15 @@ import {
   CartItems,
 } from "./cart-dropdown.styles";
 
-export default function CartDropdown(): ReactElement {
+export default function CartDropdown(): ReactElement | null {
+  const hidden = useSelector(selectCardHidden);
   const cartItems = useSelector(selectCartItems);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  if (hidden) {
+    return null
+  }
 
   return (
     <CartDropdownContainer>
