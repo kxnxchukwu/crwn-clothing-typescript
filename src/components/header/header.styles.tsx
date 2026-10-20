@@ -46,11 +46,15 @@ interface OptionLinkProps {
   onClick?: () => void;
 }
 
-export const OptionLink = styled(Link)<OptionLinkProps>`
+const OptionThemedStyles = css`
   background: ${({ theme }) => theme.backgroundColor};
   color: ${({ theme }) => theme.color};
   margin: 0.6rem;
   ${OptionContainerStyles}
+`;
+
+export const OptionLink = styled(Link)<OptionLinkProps>`
+  ${OptionThemedStyles}
   ${({ active }) =>
     active &&
     css`
@@ -60,5 +64,5 @@ export const OptionLink = styled(Link)<OptionLinkProps>`
 `;
 
 export const OptionDiv = styled.div`
-  ${OptionContainerStyles}
+  ${OptionThemedStyles}
 `;

@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { ReactComponent as Logo } from "../../assets/crown.svg";
+import Logo from "../../assets/crown.svg?react";
 import ThemeToggler from "../theme-toggler/ThemeToggler.component";
 import { useDispatch, useSelector } from "react-redux";
 import CartIcon from "../cart-icon/cart-icon.component";
@@ -11,6 +11,7 @@ import {
   LogoContainer,
   OptionsContainer,
   OptionLink,
+  OptionDiv,
 } from "./header.styles";
 import { signOutStart } from "../../features/user-reducer";
 import { useLocation } from "react-router-dom";
@@ -42,9 +43,9 @@ export default function Header(): ReactElement {
           CONTACT
         </OptionLink>
         {currentUser ? (
-          <OptionLink as="div" onClick={() => dispatch(signOutStart())}>
+          <OptionDiv onClick={() => dispatch(signOutStart())}>
             SIGN OUT
-          </OptionLink>
+          </OptionDiv>
         ) : (
           <OptionLink
             active={pathname === "/signin" ? "active" : undefined}

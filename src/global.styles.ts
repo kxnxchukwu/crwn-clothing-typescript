@@ -1,11 +1,6 @@
 import { createGlobalStyle } from "styled-components";
-import { darkTheme, lightTheme } from "./themes";
 
-export type GlobalStyleProps = {
-  theme: typeof lightTheme | typeof darkTheme;
-};
-
-export const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
+export const GlobalStyle = createGlobalStyle`
 body {
   background: ${({ theme }) => theme.backgroundColor};
   color: ${({ theme }) => theme.color};
