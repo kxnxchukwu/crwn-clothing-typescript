@@ -7,6 +7,8 @@ import {
   useLocation,
 } from "react-router";
 import { ThemeProvider } from "styled-components";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Header from "./components/header/header.component";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "./redux/hooks";
@@ -59,6 +61,7 @@ const App = () => {
         <ErrorBoundary>
           <>
             <ScrollToTop />
+            <ToastContainer theme={theme === "dark" ? "dark" : "light"} />
             <Header />
             <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               <Suspense fallback={<Spinner />}>
