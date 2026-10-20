@@ -2,10 +2,7 @@ import { ReactElement } from "react";
 import { useSelector } from "react-redux";
 import { ShoppingBag } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
-import {
-  toggleCartHidden,
-  selectCartItemsCount,
-} from "../../features/cart-slice";
+import { setCartOpen, selectCartItemsCount } from "../../features/cart-slice";
 
 export default function CartIcon({
   className,
@@ -19,7 +16,7 @@ export default function CartIcon({
     <button
       type="button"
       className={`relative ${className ?? ""}`}
-      onClick={() => dispatch(toggleCartHidden())}
+      onClick={() => dispatch(setCartOpen(true))}
       aria-label={`Cart, ${itemCount} ${itemCount === 1 ? "item" : "items"}`}
     >
       <ShoppingBag className="size-5" />

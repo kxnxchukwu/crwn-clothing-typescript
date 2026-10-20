@@ -5,9 +5,8 @@ import { Menu, User, X } from "lucide-react";
 import Logo from "../../assets/crown.svg?react";
 import ThemeToggler from "../theme-toggler/ThemeToggler.component";
 import CartIcon from "../cart-icon/cart-icon.component";
-import CartDropdown from "../cart-dropdown/cart-dropdown.component";
+import CartDrawer from "../cart-drawer/cart-drawer.component";
 import { useAppDispatch } from "../../redux/hooks";
-import { selectCardHidden } from "../../features/cart-slice";
 import { selectCurrentUser, signOut } from "../../features/user-slice";
 
 const navLinks = [
@@ -26,7 +25,6 @@ const iconButtonClass =
 export default function Header(): ReactElement {
   const { pathname } = useLocation();
   const dispatch = useAppDispatch();
-  const hidden = useSelector(selectCardHidden);
   const currentUser = useSelector(selectCurrentUser);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -87,12 +85,6 @@ export default function Header(): ReactElement {
           <ThemeToggler className={iconButtonClass} />
           <CartIcon className={iconButtonClass} />
         </div>
-
-        {hidden ? null : (
-          <div className="absolute top-full right-4 mt-2 sm:right-6 lg:right-8">
-            <CartDropdown />
-          </div>
-        )}
       </div>
 
       {menuOpen && (
@@ -115,6 +107,7 @@ export default function Header(): ReactElement {
           </ul>
         </nav>
       )}
+      <CartDrawer />
     </header>
   );
 }
