@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { signOut } from "./user-slice";
 
 export interface Item {
   name: string;
@@ -8,12 +9,12 @@ export interface Item {
   id: number;
 }
 
-interface CartState {
+export interface CartState {
   cartItems: Item[];
   hidden: boolean;
 }
 
-const initialState: CartState = { cartItems: [], hidden: false } as CartState;
+const initialState: CartState = { cartItems: [], hidden: true };
 
 export const cartSlice = createSlice({
   name: "cart",
@@ -25,7 +26,6 @@ export const cartSlice = createSlice({
       );
 
       if (existingCartItem) {
-        console.log("here");
         const newCartItemsState = state.cartItems.map((cartItem) =>
           cartItem.id === action.payload.item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
@@ -74,6 +74,11 @@ export const cartSlice = createSlice({
     toggleCartHidden: (state) => {
       state.hidden = !state.hidden;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signOut.fulfilled, (state) => {
+      state.cartItems = [];
+    });
   },
 });
 

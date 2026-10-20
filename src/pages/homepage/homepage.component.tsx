@@ -1,7 +1,7 @@
 import { ReactElement } from "react";
 import Directory from "../../components/directory/directory.component";
 import { HomePageContainer } from "./hompage.styles";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 
 export default function HomePage(): ReactElement {
   return (

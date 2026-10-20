@@ -1,10 +1,11 @@
 import { ReactElement } from "react";
 import "./ThemeToggler.styles.scss";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../redux/hooks";
 import { selectTheme, toggleTheme } from "../../features/theme-slice";
 
 export default function ThemeToggler(): ReactElement {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const checked = useSelector(selectTheme) === "dark";
   return (
     <>

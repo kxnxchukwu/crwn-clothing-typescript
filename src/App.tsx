@@ -1,14 +1,15 @@
 import { Suspense, useEffect, lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { ThemeProvider } from "styled-components";
 import Header from "./components/header/header.component";
 import { GlobalStyle } from "./global.styles";
-import { useSelector, useDispatch } from "react-redux";
-import { selectCurrentUser, checkUserSession } from "./features/user-reducer";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "./redux/hooks";
+import { selectCurrentUser, checkUserSession } from "./features/user-slice";
 import Spinner from "./components/spinner/spinner.component";
 import ErrorBoundary from "./components/error-boundary/error-boundary.component";
 import { lightTheme, darkTheme } from "./themes";
-import { fetchCollectionsStart } from "./features/shop-slice";
+import { fetchCollections } from "./features/shop-slice";
 import NotFound from "./components/notfound/notfound.component";
 import { selectTheme } from "./features/theme-slice";
 import ProductDetailsPage from "./pages/productdetails/ProductDetails.component";
@@ -30,10 +31,10 @@ const CollectionPageContainer = lazy(
 const App = () => {
   const currentUser = useSelector(selectCurrentUser);
   const theme = useSelector(selectTheme);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(checkUserSession());
-    dispatch(fetchCollectionsStart());
+    dispatch(fetchCollections());
   }, [dispatch]);
   return (
     <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>

@@ -6,7 +6,6 @@ import { CollectionsOverviewContainer } from "./collections-overview.styles";
 
 export default function CollectionsOverview(): ReactElement {
   const collections = useSelector(selectCollectionsForPreview);
-  console.log(collections);
   return (
     <CollectionsOverviewContainer>
       {collections.map(({ id, ...otherCollectionProps }) => (

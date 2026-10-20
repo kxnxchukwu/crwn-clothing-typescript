@@ -1,35 +1,30 @@
-import { ReactElement, useMemo } from "react";
+import { ReactElement } from "react";
 import Button from "../../components/button/button.component";
 import "./productdetails.styles.scss";
-import { useParams } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../redux/hooks";
 import {
   selectCollection,
   selectIsCollectionFetching,
 } from "../../features/shop-slice";
-import { Item, addItem } from "../../features/cart-slice";
+import { addItem } from "../../features/cart-slice";
 import Spinner from "../../components/spinner/spinner.component";
+import NotFound from "../../components/notfound/notfound.component";
 
 export default function ProductDetailsPage(): ReactElement {
-  const dispatch = useDispatch();
-  const { id, productId } = useParams();
-  console.log(id, productId);
-  if (!id || !productId) {
-    throw new Error("Can not find Collection or Product ID");
-  }
+  const dispatch = useAppDispatch();
+  const { id = "", productId = "" } = useParams();
   const isFetching = useSelector(selectIsCollectionFetching);
-
-  const collections = useSelector(selectCollection(id.toLowerCase()));
-
-  const { items } = collections;
-
-  const item = useMemo(
-    () => items.find(({ id }) => id === parseInt(productId)) as Item,
-    [items, productId]
-  );
+  const collection = useSelector(selectCollection(id.toLowerCase()));
+  const item = collection?.items.find((item) => item.id === Number(productId));
 
   if (isFetching) {
     return <Spinner />;
+  }
+
+  if (!item) {
+    return <NotFound />;
   }
 
   return (

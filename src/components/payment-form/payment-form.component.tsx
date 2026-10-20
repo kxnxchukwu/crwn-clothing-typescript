@@ -7,12 +7,13 @@ import {
 } from "./payment-form.styles";
 import { StripeCardElement } from "@stripe/stripe-js";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../redux/hooks";
 import { clearCart, selectCartTotal } from "../../features/cart-slice";
-import { selectCurrentUser } from "../../features/user-reducer";
+import { selectCurrentUser } from "../../features/user-slice";
 
 export default function PaymentForm(): ReactElement {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);

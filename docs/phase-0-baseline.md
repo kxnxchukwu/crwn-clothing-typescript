@@ -68,3 +68,19 @@ Run with `npm install && npm run dev` on Node 22 (no Node 16 needed). `npm run b
 | Sign-in / sign-up / Google, Stripe payment | Not tested (production Firebase; no local Stripe key) |
 
 Deploy note: rename the Netlify env var `REACT_APP_STRIPE_PUBLISHABLE_KEY` → `VITE_STRIPE_PUBLISHABLE_KEY`.
+
+---
+
+## Phase 2 re-check (RTK thunks, Firebase 11, React Router 7) — 2026-10-21
+
+| Flow | Result |
+| --- | --- |
+| Product details via direct URL (`/shop/hats/2`) | ✅ **fixed** — renders after data loads |
+| Unknown product / collection (`/shop/hats/999`, `/shop/socks`) | ✅ shows Not Found instead of crashing |
+| Cart dropdown on first load | ✅ **fixed** — starts closed; open/closed is no longer persisted |
+| Homepage tiles, collection title links (relative navigation) | ✅ |
+| Shop overview, add to cart, checkout, cart persistence | ✅ |
+| Sign-in page render | ✅ |
+| Console | No errors or warnings |
+| Main bundle | 767 kB → 259 kB (233 → 82 kB gzip) with modular Firebase |
+| Sign-in / sign-up / Google / sign-out, Stripe payment | Not tested (production Firebase; no local Stripe key) |

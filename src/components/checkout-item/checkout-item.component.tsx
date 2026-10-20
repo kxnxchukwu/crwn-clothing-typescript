@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch } from "../../redux/hooks";
 import {
   addItem,
   clearItemFromCart,
@@ -21,7 +21,7 @@ export interface CheckoutItemProps {
 export default function CheckoutItem({
   cartItem,
 }: CheckoutItemProps): ReactElement {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { name, imageUrl, price, quantity } = cartItem;
   return (
     <CheckoutItemContainer>

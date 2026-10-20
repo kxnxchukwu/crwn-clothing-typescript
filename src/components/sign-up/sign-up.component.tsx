@@ -1,13 +1,13 @@
 import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
-import { useDispatch } from "react-redux";
-import { signUpStart } from "../../features/user-reducer";
+import { useAppDispatch } from "../../redux/hooks";
+import { signUp } from "../../features/user-slice";
 import FormInput from "../form-input/form-input.component";
 import Button from "../button/button.component";
 import { SignUpContainer } from "./sign-up.styles";
 import { toast } from "react-toastify";
 
 export default function SignUp(): ReactElement {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [userCredentials, setUserCredentials] = useState({
     displayName: "",
     email: "",
@@ -25,7 +25,7 @@ export default function SignUp(): ReactElement {
       return;
     }
 
-    dispatch(signUpStart({ displayName, email, password }));
+    dispatch(signUp({ displayName, email, password }));
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {

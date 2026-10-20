@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
-import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { useAppDispatch } from "../../redux/hooks";
+import { Link } from "react-router";
 import { addItem, Item } from "../../features/cart-slice";
 import {
   CollectionItemContainer,
@@ -20,7 +20,7 @@ export default function CollectionItem({
   title,
 }: CollectionItemProps): ReactElement {
   const { name, price, imageUrl, id } = item;
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   return (
     <CollectionItemContainer>
       <BackgroundImage

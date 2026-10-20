@@ -1,11 +1,12 @@
 import { ReactElement } from "react";
 import Logo from "../../assets/crown.svg?react";
 import ThemeToggler from "../theme-toggler/ThemeToggler.component";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../redux/hooks";
 import CartIcon from "../cart-icon/cart-icon.component";
 import CartDropdown from "../cart-dropdown/cart-dropdown.component";
 import { selectCardHidden } from "../../features/cart-slice";
-import { selectCurrentUser } from "../../features/user-reducer";
+import { selectCurrentUser } from "../../features/user-slice";
 import {
   HeaderContainer,
   LogoContainer,
@@ -13,12 +14,12 @@ import {
   OptionLink,
   OptionDiv,
 } from "./header.styles";
-import { signOutStart } from "../../features/user-reducer";
-import { useLocation } from "react-router-dom";
+import { signOut } from "../../features/user-slice";
+import { useLocation } from "react-router";
 
 export default function Header(): ReactElement {
   const { pathname } = useLocation();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const hidden = useSelector(selectCardHidden);
   const currentUser = useSelector(selectCurrentUser);
   return (
@@ -43,7 +44,7 @@ export default function Header(): ReactElement {
           CONTACT
         </OptionLink>
         {currentUser ? (
-          <OptionDiv onClick={() => dispatch(signOutStart())}>
+          <OptionDiv onClick={() => dispatch(signOut())}>
             SIGN OUT
           </OptionDiv>
         ) : (

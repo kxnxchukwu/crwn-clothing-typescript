@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch } from "../../redux/hooks";
 import FormInput from "../form-input/form-input.component";
 import Button, { BUTTON_TYPE_CLASSES } from "../button/button.component";
 
@@ -9,12 +9,12 @@ import {
   ButtonsBarContainer,
 } from "./sign-in.styles";
 import {
-  googleSignInStart,
-  emailSignInStart,
-} from "../../features/user-reducer";
+  signInWithGoogle,
+  signInWithEmail,
+} from "../../features/user-slice";
 
 export default function SignIn(): ReactElement {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [userCredentials, setUserCredentials] = useState({
     email: "",
     password: "",
@@ -24,7 +24,7 @@ export default function SignIn(): ReactElement {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    dispatch(emailSignInStart({ email, password }));
+    dispatch(signInWithEmail({ email, password }));
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +62,7 @@ export default function SignIn(): ReactElement {
           <Button
             buttonType={BUTTON_TYPE_CLASSES.google}
             type="button"
-            onClick={() => dispatch(googleSignInStart())}
+            onClick={() => dispatch(signInWithGoogle())}
           >
             Sign in with Google
           </Button>
