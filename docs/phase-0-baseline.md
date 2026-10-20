@@ -48,3 +48,23 @@ hardcoded in `src/firebase/firebase.utils.ts`, so collections load from the live
    reads `collections.items` before the fetch finishes; also calls hooks after a conditional `throw`.
 2. Shop overview Jackets preview contains a womens item (data or selector issue).
 3. Leftover `console.log` calls in product details and collection code.
+
+---
+
+## Phase 1 re-check (Vite 8 + React 19) — 2026-10-21
+
+Run with `npm install && npm run dev` on Node 22 (no Node 16 needed). `npm run build` ~1s, `npm test` runs Vitest.
+
+| Flow | Result |
+| --- | --- |
+| Homepage tiles → collection page | ✅ same as baseline |
+| Add to cart, dropdown, checkout quantity/remove/total | ✅ same as baseline |
+| Cart survives a full reload (redux-persist) | ✅ |
+| Product details via name link | ✅ same as baseline |
+| Product details via direct URL | ❌ same pre-existing crash (not addressed in Phase 1) |
+| Theme toggle, contact, sign-in page render, 404 | ✅ same as baseline |
+| 375px layout | Same issues as baseline (scrollWidth 437 vs 375) — no regressions |
+| Console | No React unknown-prop or deprecation warnings |
+| Sign-in / sign-up / Google, Stripe payment | Not tested (production Firebase; no local Stripe key) |
+
+Deploy note: rename the Netlify env var `REACT_APP_STRIPE_PUBLISHABLE_KEY` → `VITE_STRIPE_PUBLISHABLE_KEY`.
