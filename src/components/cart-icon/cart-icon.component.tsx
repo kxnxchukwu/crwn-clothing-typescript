@@ -1,24 +1,33 @@
 import { ReactElement } from "react";
-import { ShoppingIcon } from "../shopping-bag/ShoppingBag.component";
 import { useSelector } from "react-redux";
+import { ShoppingBag } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
 import {
   toggleCartHidden,
   selectCartItemsCount,
 } from "../../features/cart-slice";
-import { CartIconContainer, ItemCount } from "./cart-icon.styles";
 
-export default function CartIcon(): ReactElement {
+export default function CartIcon({
+  className,
+}: {
+  className?: string;
+}): ReactElement {
   const dispatch = useAppDispatch();
   const itemCount = useSelector(selectCartItemsCount);
-  const handleClick = () => {
-    dispatch(toggleCartHidden());
-  };
 
   return (
-    <CartIconContainer onClick={handleClick}>
-      <ShoppingIcon className="shopping-icon" />
-      <ItemCount>{itemCount}</ItemCount>
-    </CartIconContainer>
+    <button
+      type="button"
+      className={`relative ${className ?? ""}`}
+      onClick={() => dispatch(toggleCartHidden())}
+      aria-label={`Cart, ${itemCount} ${itemCount === 1 ? "item" : "items"}`}
+    >
+      <ShoppingBag className="size-5" />
+      {itemCount > 0 && (
+        <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-foreground px-1 text-[10px] leading-4 font-medium text-background">
+          {itemCount}
+        </span>
+      )}
+    </button>
   );
 }

@@ -1,28 +1,28 @@
 import styled from "styled-components";
 import { SpinnerContainer } from "../spinner/spinner.styles";
 
+// Interim styling to sit with the Tailwind redesign until each page moves over.
 export const BaseButton = styled.button`
-  align-items: center
+  align-items: center;
   min-width: 165px;
   width: auto;
-  height: 50px;
-  letter-spacing: 0.5px;
-  line-height: 50px;
-  padding: 0 35px 0 35px;
-  font-size: 15px;
-  background-color: black;
-  color: white;
+  height: 44px;
+  letter-spacing: 0.05em;
+  padding: 0 20px;
+  font-size: 13px;
+  white-space: nowrap;
+  background-color: var(--foreground);
+  color: var(--background);
   text-transform: uppercase;
-  font-family: "Open Sans Condensed";
-  font-weight: bolder;
-  border: none;
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid var(--foreground);
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   justify-content: center;
   &:hover {
-    background-color: white;
-    color: black;
-    border: 1px solid black;
+    opacity: 0.9;
   }
 `;
 
@@ -36,13 +36,12 @@ export const GoogleSignInButton = styled(BaseButton)`
 `;
 
 export const InvertedButton = styled(BaseButton)`
-  background-color: white;
-  color: black;
-  border: 1px solid black;
+  background-color: var(--background);
+  color: var(--foreground);
   &:hover {
-    background-color: black;
-    color: white;
-    border: none;
+    background-color: var(--foreground);
+    color: var(--background);
+    opacity: 1;
   }
 `;
 

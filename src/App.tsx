@@ -2,7 +2,6 @@ import { Suspense, useEffect, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { ThemeProvider } from "styled-components";
 import Header from "./components/header/header.component";
-import { GlobalStyle } from "./global.styles";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "./redux/hooks";
 import { selectCurrentUser, checkUserSession } from "./features/user-slice";
@@ -16,16 +15,16 @@ import ProductDetailsPage from "./pages/productdetails/ProductDetails.component"
 
 const HomePage = lazy(() => import("./pages/homepage/homepage.component"));
 const SignInAndSignUpPage = lazy(
-  () => import("./pages/sign-in-and-sign-up/sign-in-and-sign-up.component")
+  () => import("./pages/sign-in-and-sign-up/sign-in-and-sign-up.component"),
 );
 const CheckoutPage = lazy(() => import("./pages/checkout/checkout.component"));
 const ContactPage = lazy(() => import("./pages/contact/contactpage.component"));
 const CollectionsOverviewContainer = lazy(
   () =>
-    import("./components/collections-overview/collections-overview-container")
+    import("./components/collections-overview/collections-overview-container"),
 );
 const CollectionPageContainer = lazy(
-  () => import("./components/collection/collection.container")
+  () => import("./components/collection/collection.container"),
 );
 
 const App = () => {
@@ -33,17 +32,19 @@ const App = () => {
   const theme = useSelector(selectTheme);
   const dispatch = useAppDispatch();
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+  useEffect(() => {
     dispatch(checkUserSession());
     dispatch(fetchCollections());
   }, [dispatch]);
   return (
     <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
-      <div>
-        <BrowserRouter>
-          <ErrorBoundary>
-            <>
-              <GlobalStyle />
-              <Header />
+      <BrowserRouter>
+        <ErrorBoundary>
+          <>
+            <Header />
+            <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               <Suspense fallback={<Spinner />}>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
@@ -72,10 +73,10 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
-            </>
-          </ErrorBoundary>
-        </BrowserRouter>
-      </div>
+            </main>
+          </>
+        </ErrorBoundary>
+      </BrowserRouter>
     </ThemeProvider>
   );
 };

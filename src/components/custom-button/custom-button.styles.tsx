@@ -59,17 +59,19 @@ interface CustomButtonContainerProps {
 export const CustomButtonContainer = styled.button<CustomButtonContainerProps>`
   min-width: 165px;
   width: auto;
-  height: 50px;
-  letter-spacing: 0.5px;
-  line-height: 50px;
-  padding: 0 35px 0 35px;
-  font-size: 15px;
+  height: 44px;
+  letter-spacing: 0.05em;
+  line-height: 44px;
+  padding: 0 20px;
+  font-size: 13px;
+  white-space: nowrap;
   background-color: black;
   color: white;
   text-transform: uppercase;
-  font-family: "Open Sans Condensed";
-  font-weight: bolder;
+  font-family: inherit;
+  font-weight: 500;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   justify-content: center;
