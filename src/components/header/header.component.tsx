@@ -30,7 +30,9 @@ export default function Header(): ReactElement {
   const currentUser = useSelector(selectCurrentUser);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => setMenuOpen(false), [pathname]);
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   const account = currentUser ? (
     <button

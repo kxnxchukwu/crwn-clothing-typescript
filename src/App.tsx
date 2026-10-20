@@ -1,5 +1,11 @@
 import { Suspense, useEffect, lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router";
 import { ThemeProvider } from "styled-components";
 import Header from "./components/header/header.component";
 import { useSelector } from "react-redux";
@@ -27,6 +33,15 @@ const CollectionPageContainer = lazy(
   () => import("./components/collection/collection.container"),
 );
 
+// Start each new page at the top instead of keeping the previous scroll position.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 const App = () => {
   const currentUser = useSelector(selectCurrentUser);
   const theme = useSelector(selectTheme);
@@ -43,6 +58,7 @@ const App = () => {
       <BrowserRouter>
         <ErrorBoundary>
           <>
+            <ScrollToTop />
             <Header />
             <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               <Suspense fallback={<Spinner />}>

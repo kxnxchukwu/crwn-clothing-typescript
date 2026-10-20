@@ -21,7 +21,7 @@ hardcoded in `src/firebase/firebase.utils.ts`, so collections load from the live
 | Flow | Local | Live | Notes |
 | --- | --- | --- | --- |
 | Homepage category tiles → collection page | ✅ | ✅ | |
-| Shop overview (`/shop`) | ✅ | — | Jackets preview shows "Blue Tanktop" (a womens item) |
+| Shop overview (`/shop`) | ✅ | — | Looked like Jackets showed "Blue Tanktop"; it was the overflowing row exposing the next section — data is correct |
 | Collection page (`/shop/hats`) | ✅ | — | |
 | Add to cart, cart badge count | ✅ | — | |
 | Cart dropdown | ✅ | ⚠️ | Live: dropdown is open and overlays the page on load — latest commit not deployed yet? |
@@ -46,7 +46,7 @@ hardcoded in `src/firebase/firebase.utils.ts`, so collections load from the live
 
 1. Product details crashes when loaded directly (`src/pages/productdetails/ProductDetails.component.tsx`):
    reads `collections.items` before the fetch finishes; also calls hooks after a conditional `throw`.
-2. Shop overview Jackets preview contains a womens item (data or selector issue).
+2. ~~Shop overview Jackets preview contains a womens item~~ — not a bug: layout overflow showed the Womens row.
 3. Leftover `console.log` calls in product details and collection code.
 
 ---
