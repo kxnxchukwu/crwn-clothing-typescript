@@ -1,11 +1,15 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+// Locally, E2E_EMAIL / E2E_PASSWORD come from .env.local; in CI from secrets.
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const PORT = 4173;
 const isCI = !!process.env.CI;
 
 // End-to-end tests against the production build (vite preview). They read
-// the live, public product catalogue from Firestore; sign-in and payment
-// are covered by component tests instead (no real accounts or charges).
+// the live, public product catalogue from Firestore. The sign-in test uses a
+// dedicated test account; payments are covered by component tests instead.
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,

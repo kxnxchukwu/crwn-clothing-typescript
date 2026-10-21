@@ -51,7 +51,11 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       # Builds the site and serves it with vite preview (playwright.config.ts).
+      # The sign-in test uses a dedicated account; it's skipped if unset.
       - run: npm run test:e2e
+        env:
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
