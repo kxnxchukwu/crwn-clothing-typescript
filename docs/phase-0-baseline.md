@@ -82,5 +82,24 @@ Deploy note: rename the Netlify env var `REACT_APP_STRIPE_PUBLISHABLE_KEY` → `
 | Shop overview, add to cart, checkout, cart persistence | ✅ |
 | Sign-in page render | ✅ |
 | Console | No errors or warnings |
-| Main bundle | 767 kB → 259 kB (233 → 82 kB gzip) with modular Firebase |
+| Bundle | Correction: the 259 kB figure was one chunk, with React split into another file — not a 3× saving. See the redesign section for the total. |
 | Sign-in / sign-up / Google / sign-out, Stripe payment | Not tested (production Firebase; no local Stripe key) |
+
+---
+
+## Redesign (direction B, "clean retail") — 2026-10-21
+
+All pages moved to Tailwind v4 with shared tokens (light/dark), Inter, and Lucide icons:
+header + mobile menu, homepage, shop overview, collection pages, product cards, product page,
+slide-out cart drawer, checkout, and sign-in/sign-up.
+
+| Check | Result |
+| --- | --- |
+| 375px layout, every page | ✅ no horizontal scroll (baseline: 437–999px) |
+| Light and dark themes, every page | ✅ |
+| Total JS, all chunks | 713 kB raw / 227 kB gzip (Phase 1 main chunk alone was 767 / 233) |
+| Tests | 11 passing (cart, shop, price format, auth error messages) |
+| Fixed along the way | stuck Pay button, scroll position on navigation, silent sign-in errors, sign-up toast never shown, cart drawer state on Escape |
+| Not tested locally | real sign-in/sign-up/Google (production Firebase), real Stripe payment |
+
+Still on styled-components: Spinner, NotFound, ErrorBoundary, Contact page.

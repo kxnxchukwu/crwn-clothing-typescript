@@ -1,79 +1,122 @@
 import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
 import { useAppDispatch } from "../../redux/hooks";
-import { signUp } from "../../features/user-slice";
-import FormInput from "../form-input/form-input.component";
-import Button from "../button/button.component";
-import { SignUpContainer } from "./sign-up.styles";
-import { toast } from "react-toastify";
+import { signInWithGoogle, signUp } from "../../features/user-slice";
+import { authErrorMessage } from "../../utils/auth-errors";
+import FormField from "../form-field/form-field.component";
+import {
+  FormError,
+  GoogleButton,
+  OrDivider,
+  SubmitButton,
+} from "../auth/auth-ui";
+
+// Firebase rejects passwords shorter than this.
+const MIN_PASSWORD_LENGTH = 6;
 
 export default function SignUp(): ReactElement {
   const dispatch = useAppDispatch();
-  const [userCredentials, setUserCredentials] = useState({
+  const [fields, setFields] = useState({
     displayName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<{
+    password?: string;
+    confirmPassword?: string;
+  }>({});
+  const [pending, setPending] = useState<"email" | "google" | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const { displayName, email, password, confirmPassword } = userCredentials;
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-
-    if (password !== confirmPassword) {
-      toast("Your Passwords do not match!.", { type: "error" });
-      return;
-    }
-
-    dispatch(signUp({ displayName, email, password }));
-  };
+  const { displayName, email, password, confirmPassword } = fields;
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setUserCredentials({ ...userCredentials, [name]: value });
+    setFields((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => ({ ...current, [name]: undefined }));
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+
+    const errors: typeof fieldErrors = {};
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      errors.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
+    }
+    if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords don't match.";
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    setPending("email");
+    const result = await dispatch(signUp({ displayName, email, password }));
+    setPending(null);
+    if (signUp.rejected.match(result)) {
+      setError(authErrorMessage(result.payload));
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError(null);
+    setPending("google");
+    const result = await dispatch(signInWithGoogle());
+    setPending(null);
+    if (signInWithGoogle.rejected.match(result)) {
+      setError(authErrorMessage(result.payload));
+    }
   };
 
   return (
-    <SignUpContainer>
-      <h2 className="title">I do not have an account.</h2>
-      <span>Sign up with your email and password.</span>
-      <form className="sign-up-form" onSubmit={handleSubmit}>
-        <FormInput
-          type="text"
+    <div className="space-y-6">
+      <GoogleButton pending={pending === "google"} onClick={handleGoogle}>
+        Sign up with Google
+      </GoogleButton>
+      <OrDivider />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormError message={error} />
+        <FormField
+          label="Name"
           name="displayName"
+          autoComplete="name"
           value={displayName}
-          handleChange={handleChange}
-          label="Display Name"
+          onChange={handleChange}
           required
         />
-        <FormInput
+        <FormField
+          label="Email"
           type="email"
           name="email"
+          autoComplete="email"
           value={email}
-          handleChange={handleChange}
-          label="Email"
+          onChange={handleChange}
           required
         />
-        <FormInput
+        <FormField
+          label="Password"
           type="password"
           name="password"
+          autoComplete="new-password"
           value={password}
-          handleChange={handleChange}
-          label="Password"
+          onChange={handleChange}
+          error={fieldErrors.password}
           required
         />
-        <FormInput
+        <FormField
+          label="Confirm password"
           type="password"
           name="confirmPassword"
+          autoComplete="new-password"
           value={confirmPassword}
-          handleChange={handleChange}
-          label="Confirm Password"
+          onChange={handleChange}
+          error={fieldErrors.confirmPassword}
           required
         />
-        <Button buttonType="base" type="submit">
-          Sign Up
-        </Button>
+        <SubmitButton pending={pending === "email"}>
+          Create account
+        </SubmitButton>
       </form>
-    </SignUpContainer>
+    </div>
   );
 }

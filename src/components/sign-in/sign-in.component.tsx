@@ -1,73 +1,72 @@
-import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
+import { FormEvent, ReactElement, useState } from "react";
 import { useAppDispatch } from "../../redux/hooks";
-import FormInput from "../form-input/form-input.component";
-import Button, { BUTTON_TYPE_CLASSES } from "../button/button.component";
-
+import { signInWithEmail, signInWithGoogle } from "../../features/user-slice";
+import { authErrorMessage } from "../../utils/auth-errors";
+import FormField from "../form-field/form-field.component";
 import {
-  SignInContainer,
-  SignInTitle,
-  ButtonsBarContainer,
-} from "./sign-in.styles";
-import {
-  signInWithGoogle,
-  signInWithEmail,
-} from "../../features/user-slice";
+  FormError,
+  GoogleButton,
+  OrDivider,
+  SubmitButton,
+} from "../auth/auth-ui";
 
 export default function SignIn(): ReactElement {
   const dispatch = useAppDispatch();
-  const [userCredentials, setUserCredentials] = useState({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [pending, setPending] = useState<"email" | "google" | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const { email, password } = userCredentials;
-
+  // On success the /signin route redirects home, so only failures need handling.
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    dispatch(signInWithEmail({ email, password }));
+    setError(null);
+    setPending("email");
+    const result = await dispatch(signInWithEmail({ email, password }));
+    setPending(null);
+    if (signInWithEmail.rejected.match(result)) {
+      setError(authErrorMessage(result.payload));
+    }
   };
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { value, name } = event.target;
-    setUserCredentials({ ...userCredentials, [name]: value });
+  const handleGoogle = async () => {
+    setError(null);
+    setPending("google");
+    const result = await dispatch(signInWithGoogle());
+    setPending(null);
+    if (signInWithGoogle.rejected.match(result)) {
+      setError(authErrorMessage(result.payload));
+    }
   };
 
   return (
-    <SignInContainer>
-      <SignInTitle>I already have an account</SignInTitle>
-      <span>Sign in with your email and password</span>
-
-      <form onSubmit={handleSubmit}>
-        <FormInput
-          name="email"
+    <div className="space-y-6">
+      <GoogleButton pending={pending === "google"} onClick={handleGoogle}>
+        Continue with Google
+      </GoogleButton>
+      <OrDivider />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormError message={error} />
+        <FormField
+          label="Email"
           type="email"
-          handleChange={handleChange}
+          name="email"
+          autoComplete="email"
           value={email}
-          label="email"
+          onChange={(event) => setEmail(event.target.value)}
           required
         />
-        <FormInput
-          name="password"
+        <FormField
+          label="Password"
           type="password"
+          name="password"
+          autoComplete="current-password"
           value={password}
-          handleChange={handleChange}
-          label="password"
+          onChange={(event) => setPassword(event.target.value)}
           required
         />
-        <ButtonsBarContainer>
-          <Button buttonType="base" type="submit">
-            {" "}
-            Sign in{" "}
-          </Button>
-          <Button
-            buttonType={BUTTON_TYPE_CLASSES.google}
-            type="button"
-            onClick={() => dispatch(signInWithGoogle())}
-          >
-            Sign in with Google
-          </Button>
-        </ButtonsBarContainer>
+        <SubmitButton pending={pending === "email"}>Sign in</SubmitButton>
       </form>
-    </SignInContainer>
+    </div>
   );
 }
