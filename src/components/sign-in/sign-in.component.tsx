@@ -1,4 +1,5 @@
 import { FormEvent, ReactElement, useState } from "react";
+import { toast } from "sonner";
 import { useAppDispatch } from "../../redux/hooks";
 import { signInWithEmail, signInWithGoogle } from "../../features/user-slice";
 import { authErrorMessage } from "../../utils/auth-errors";
@@ -10,6 +11,9 @@ import {
   SubmitButton,
 } from "../auth/auth-ui";
 
+const welcome = (name?: string | null) =>
+  name ? `Welcome back, ${name.split(" ")[0]}` : "Welcome back";
+
 export default function SignIn(): ReactElement {
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
@@ -17,7 +21,7 @@ export default function SignIn(): ReactElement {
   const [pending, setPending] = useState<"email" | "google" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // On success the /signin route redirects home, so only failures need handling.
+  // On success the /signin route redirects home; the toast confirms it.
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
@@ -26,6 +30,8 @@ export default function SignIn(): ReactElement {
     setPending(null);
     if (signInWithEmail.rejected.match(result)) {
       setError(authErrorMessage(result.payload));
+    } else {
+      toast.success(welcome(result.payload?.displayName));
     }
   };
 
@@ -36,6 +42,8 @@ export default function SignIn(): ReactElement {
     setPending(null);
     if (signInWithGoogle.rejected.match(result)) {
       setError(authErrorMessage(result.payload));
+    } else {
+      toast.success(welcome(result.payload?.displayName));
     }
   };
 

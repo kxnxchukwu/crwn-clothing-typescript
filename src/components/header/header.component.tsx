@@ -1,6 +1,7 @@
 import { ReactElement, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 import { Menu, User, X } from "lucide-react";
 import Logo from "../../assets/crown.svg?react";
 import ThemeToggler from "../theme-toggler/ThemeToggler.component";
@@ -9,10 +10,7 @@ import CartDrawer from "../cart-drawer/cart-drawer.component";
 import { useAppDispatch } from "../../redux/hooks";
 import { selectCurrentUser, signOut } from "../../features/user-slice";
 
-const navLinks = [
-  { to: "/shop", label: "Shop" },
-  { to: "/contact", label: "Contact" },
-];
+const navLinks = [{ to: "/shop", label: "Shop" }];
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm transition-colors hover:text-foreground ${
@@ -35,7 +33,14 @@ export default function Header(): ReactElement {
   const account = currentUser ? (
     <button
       type="button"
-      onClick={() => dispatch(signOut())}
+      onClick={async () => {
+        const result = await dispatch(signOut());
+        if (signOut.fulfilled.match(result)) {
+          toast("You're signed out");
+        } else {
+          toast.error("Couldn't sign you out. Please try again.");
+        }
+      }}
       className="text-sm text-muted transition-colors hover:text-foreground"
     >
       Sign out

@@ -7,6 +7,7 @@ import {
   useLocation,
 } from "react-router";
 import { ThemeProvider } from "styled-components";
+import { Toaster } from "sonner";
 import Header from "./components/header/header.component";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "./redux/hooks";
@@ -24,7 +25,6 @@ const SignInAndSignUpPage = lazy(
   () => import("./pages/sign-in-and-sign-up/sign-in-and-sign-up.component"),
 );
 const CheckoutPage = lazy(() => import("./pages/checkout/checkout.component"));
-const ContactPage = lazy(() => import("./pages/contact/contactpage.component"));
 const CollectionsOverviewContainer = lazy(
   () =>
     import("./components/collections-overview/collections-overview-container"),
@@ -59,6 +59,19 @@ const App = () => {
         <ErrorBoundary>
           <>
             <ScrollToTop />
+            <Toaster
+              theme={theme === "dark" ? "dark" : "light"}
+              position="bottom-right"
+              closeButton
+              toastOptions={{
+                style: {
+                  fontFamily: "inherit",
+                  background: "var(--background)",
+                  color: "var(--foreground)",
+                  borderColor: "var(--line)",
+                },
+              }}
+            />
             <Header />
             <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               <Suspense fallback={<Spinner />}>
@@ -75,7 +88,6 @@ const App = () => {
                     </Route>
                   </Route>
                   <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
                   <Route
                     path="/signin"
                     element={

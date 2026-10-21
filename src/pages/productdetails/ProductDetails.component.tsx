@@ -1,7 +1,7 @@
 import { ReactElement, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useSelector } from "react-redux";
-import { Check, ChevronRight, Minus, Plus } from "lucide-react";
+import { ChevronRight, Minus, Plus } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
 import {
   selectCollection,
@@ -12,6 +12,7 @@ import NotFound from "../../components/notfound/notfound.component";
 import CollectionItem from "../../components/collection-item/collection-item.component";
 import { ProductGrid } from "../../components/product-grid/product-grid.component";
 import { formatPrice } from "../../utils/format";
+import { toastAddedToCart } from "../../utils/cart-toast";
 
 const MAX_QUANTITY = 10;
 
@@ -22,12 +23,10 @@ export default function ProductDetailsPage(): ReactElement {
   const collection = useSelector(selectCollection(id.toLowerCase()));
   const item = collection?.items.find((item) => item.id === Number(productId));
   const [quantity, setQuantity] = useState(1);
-  const [addedCount, setAddedCount] = useState(0);
 
   // Reset when moving between products (e.g. via "More from").
   useEffect(() => {
     setQuantity(1);
-    setAddedCount(0);
   }, [productId]);
 
   useEffect(() => {
@@ -50,7 +49,7 @@ export default function ProductDetailsPage(): ReactElement {
     for (let i = 0; i < quantity; i++) {
       dispatch(addItem({ item }));
     }
-    setAddedCount(quantity);
+    toastAddedToCart(dispatch, item.name, quantity);
   };
 
   const related = collection.items
@@ -156,26 +155,6 @@ export default function ProductDetailsPage(): ReactElement {
                 Add to cart
               </button>
             </div>
-
-            <p
-              className="mt-4 flex min-h-5 items-center gap-1.5 text-sm"
-              role="status"
-            >
-              {addedCount > 0 && (
-                <>
-                  <Check className="size-4" aria-hidden="true" />
-                  {addedCount === 1
-                    ? "Added to your cart."
-                    : `${addedCount} added to your cart.`}
-                  <Link
-                    to="/checkout"
-                    className="ml-1 underline underline-offset-4"
-                  >
-                    Go to checkout
-                  </Link>
-                </>
-              )}
-            </p>
           </div>
         </div>
       </div>

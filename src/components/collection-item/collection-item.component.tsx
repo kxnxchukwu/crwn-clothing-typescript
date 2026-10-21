@@ -4,6 +4,7 @@ import { Check, Plus } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
 import { addItem, Item } from "../../features/cart-slice";
 import { formatPrice } from "../../utils/format";
+import { toastAddedToCart } from "../../utils/cart-toast";
 
 export interface CollectionItemProps {
   item: Item;
@@ -30,6 +31,7 @@ export default function CollectionItem({
   const handleAdd = () => {
     dispatch(addItem({ item }));
     setJustAdded(true);
+    toastAddedToCart(dispatch, name);
   };
 
   return (

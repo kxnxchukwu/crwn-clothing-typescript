@@ -102,4 +102,4 @@ slide-out cart drawer, checkout, and sign-in/sign-up.
 | Fixed along the way | stuck Pay button, scroll position on navigation, silent sign-in errors, sign-up toast never shown, cart drawer state on Escape |
 | Not tested locally | real sign-in/sign-up/Google (production Firebase), real Stripe payment |
 
-Still on styled-components: Spinner, NotFound, ErrorBoundary, Contact page.
+Still on styled-components: Spinner, NotFound, ErrorBoundary. Contact page removed; Sonner toasts for sign-in/out and add-to-cart.

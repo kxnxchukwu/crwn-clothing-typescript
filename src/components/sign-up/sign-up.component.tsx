@@ -1,4 +1,5 @@
 import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
+import { toast } from "sonner";
 import { useAppDispatch } from "../../redux/hooks";
 import { signInWithGoogle, signUp } from "../../features/user-slice";
 import { authErrorMessage } from "../../utils/auth-errors";
@@ -55,6 +56,10 @@ export default function SignUp(): ReactElement {
     setPending(null);
     if (signUp.rejected.match(result)) {
       setError(authErrorMessage(result.payload));
+    } else {
+      toast.success("Account created", {
+        description: `You're signed in as ${email}.`,
+      });
     }
   };
 
@@ -65,6 +70,8 @@ export default function SignUp(): ReactElement {
     setPending(null);
     if (signInWithGoogle.rejected.match(result)) {
       setError(authErrorMessage(result.payload));
+    } else {
+      toast.success("You're signed in with Google");
     }
   };
 
