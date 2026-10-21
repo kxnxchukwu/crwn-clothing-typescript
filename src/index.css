@@ -4,8 +4,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* Design tokens — direction B, "clean retail": Inter, black, white and greys.
-   Colours live in CSS variables so the dark theme swaps them in one place;
-   styled-components themes (src/themes.ts) read the same variables. */
+   Colours live in CSS variables so the dark theme swaps them in one place. */
 :root {
   --background: #ffffff;
   --foreground: #0a0a0a;

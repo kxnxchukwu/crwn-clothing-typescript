@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -24,11 +24,9 @@ export default function Header(): ReactElement {
   const { pathname } = useLocation();
   const dispatch = useAppDispatch();
   const currentUser = useSelector(selectCurrentUser);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+  // The menu belongs to the page it was opened on, so navigating closes it.
+  const [menuOpenOn, setMenuOpenOn] = useState<string | null>(null);
+  const menuOpen = menuOpenOn === pathname;
 
   const account = currentUser ? (
     <button
@@ -60,7 +58,7 @@ export default function Header(): ReactElement {
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
           aria-controls="mobile-menu"
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={() => setMenuOpenOn(menuOpen ? null : pathname)}
         >
           {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>

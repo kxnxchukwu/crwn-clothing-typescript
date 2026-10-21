@@ -22,12 +22,16 @@ export default function ProductDetailsPage(): ReactElement {
   const isFetching = useSelector(selectIsCollectionFetching);
   const collection = useSelector(selectCollection(id.toLowerCase()));
   const item = collection?.items.find((item) => item.id === Number(productId));
-  const [quantity, setQuantity] = useState(1);
-
-  // Reset when moving between products (e.g. via "More from").
-  useEffect(() => {
-    setQuantity(1);
-  }, [productId]);
+  // Quantity belongs to the product it was picked for, so moving to another
+  // product (e.g. via "More from") starts again at 1.
+  const [picked, setPicked] = useState({ productId, quantity: 1 });
+  const quantity = picked.productId === productId ? picked.quantity : 1;
+  // Update from the latest stored value so quick repeated clicks all count.
+  const setQuantity = (update: (current: number) => number) =>
+    setPicked((prev) => ({
+      productId,
+      quantity: update(prev.productId === productId ? prev.quantity : 1),
+    }));
 
   useEffect(() => {
     if (!item) return;

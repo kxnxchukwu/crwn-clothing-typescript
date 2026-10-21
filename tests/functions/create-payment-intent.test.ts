@@ -37,7 +37,8 @@ vi.mock("../../netlify/functions/lib/catalogue", () => ({
   ),
 }));
 
-const { handler } = await import("../../netlify/functions/create-payment-intent");
+const { handler } =
+  await import("../../netlify/functions/create-payment-intent");
 
 const call = async (
   body: unknown,

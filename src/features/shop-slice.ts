@@ -16,7 +16,7 @@ const initialState: ShopState = {
 
 export const fetchCollections = createAsyncThunk(
   "shop/fetchCollections",
-  getCollections
+  getCollections,
 );
 
 export const shopSlice = createSlice({
@@ -46,20 +46,20 @@ export const selectCollections = (state: { shop: ShopState }) =>
 
 export const selectCollectionsForPreview = createSelector(
   [selectCollections],
-  (collections) => Object.values(collections)
+  (collections) => Object.values(collections),
 );
 
 // Undefined until collections have loaded, or if the URL names no collection.
 export const selectCollection = (collectionUrlParam: string) =>
   createSelector(
     [selectCollections],
-    (collections): Collection | undefined => collections[collectionUrlParam]
+    (collections): Collection | undefined => collections[collectionUrlParam],
   );
 
 // True until the first fetch settles, so pages never render with no data.
 export const selectIsCollectionFetching = createSelector(
   [selectShop],
-  (shop) => shop.status === "idle" || shop.status === "loading"
+  (shop) => shop.status === "idle" || shop.status === "loading",
 );
 
 export default shopSlice.reducer;

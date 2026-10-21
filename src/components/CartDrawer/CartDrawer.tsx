@@ -48,6 +48,9 @@ export default function CartDrawer(): ReactElement {
   }, [pathname, dispatch]);
 
   return (
+    // Backdrop clicks are a mouse shortcut; keyboard users close with Escape,
+    // which <dialog> handles natively.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <dialog
       ref={dialogRef}
       aria-labelledby="cart-heading"
@@ -79,7 +82,6 @@ export default function CartDrawer(): ReactElement {
             onClick={close}
             className="-mr-2 inline-flex size-10 items-center justify-center rounded-full transition-colors hover:bg-surface"
             aria-label="Close cart"
-            autoFocus
           >
             <X className="size-5" />
           </button>

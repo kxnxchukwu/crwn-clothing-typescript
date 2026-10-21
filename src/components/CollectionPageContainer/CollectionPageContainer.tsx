@@ -3,10 +3,7 @@ import { Link, useParams } from "react-router";
 import { ChevronRight } from "lucide-react";
 import { useSelector } from "react-redux";
 import CollectionItem from "../CollectionItem/CollectionItem";
-import {
-  ProductGrid,
-  ProductGridSkeleton,
-} from "../ProductGrid/ProductGrid";
+import { ProductGrid, ProductGridSkeleton } from "../ProductGrid/ProductGrid";
 import NotFound from "../NotFound/NotFound";
 import {
   selectCollection,
