@@ -89,4 +89,18 @@ describe("CartDrawer", () => {
       screen.getByRole("link", { name: "Start shopping" }),
     ).toHaveAttribute("href", "/shop");
   });
+
+  // Regression: on /shop the link doesn't change the URL, so closing can't
+  // rely on navigation.
+  it("closes when Start shopping is clicked on the shop page itself", async () => {
+    const { store, user } = renderWithProviders(<CartDrawer />, {
+      route: "/shop",
+      state: { cart: { cartItems: [], hidden: false } },
+    });
+
+    await user.click(screen.getByRole("link", { name: "Start shopping" }));
+
+    expect(store.getState().cart.hidden).toBe(true);
+    expect(dialog()).not.toHaveAttribute("open");
+  });
 });

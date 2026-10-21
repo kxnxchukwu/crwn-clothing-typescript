@@ -27,11 +27,14 @@ export default function Header(): ReactElement {
   // The menu belongs to the page it was opened on, so navigating closes it.
   const [menuOpenOn, setMenuOpenOn] = useState<string | null>(null);
   const menuOpen = menuOpenOn === pathname;
+  // Links to the current page don't change the URL, so close explicitly too.
+  const closeMenu = () => setMenuOpenOn(null);
 
   const account = currentUser ? (
     <button
       type="button"
       onClick={async () => {
+        closeMenu();
         const result = await dispatch(signOut());
         if (signOut.fulfilled.match(result)) {
           toast("You're signed out");
@@ -44,7 +47,7 @@ export default function Header(): ReactElement {
       Sign out
     </button>
   ) : (
-    <NavLink to="/signin" className={navLinkClass}>
+    <NavLink to="/signin" className={navLinkClass} onClick={closeMenu}>
       Sign in
     </NavLink>
   );
@@ -105,14 +108,18 @@ export default function Header(): ReactElement {
           <ul className="flex flex-col gap-4">
             {navLinks.map(({ to, label }) => (
               <li key={to}>
-                <NavLink to={to} className={navLinkClass}>
+                <NavLink to={to} className={navLinkClass} onClick={closeMenu}>
                   {label}
                 </NavLink>
               </li>
             ))}
             {currentUser && (
               <li>
-                <NavLink to="/orders" className={navLinkClass}>
+                <NavLink
+                  to="/orders"
+                  className={navLinkClass}
+                  onClick={closeMenu}
+                >
                   Your orders
                 </NavLink>
               </li>
