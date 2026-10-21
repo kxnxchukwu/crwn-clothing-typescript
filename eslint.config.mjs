@@ -33,6 +33,12 @@ export default tseslint.config(
     languageOptions: { globals: globals.vitest },
   },
 
+  // Test files and helpers aren't hot-reloaded component modules.
+  {
+    files: ["**/__tests__/**", "src/test/**"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
+
   // Formatting is Prettier's job; turn off rules that would fight it.
   prettier,
 );

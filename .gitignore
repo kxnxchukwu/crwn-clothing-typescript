@@ -32,3 +32,9 @@ dev-dist
 
 # Local notes (baseline checklist, setup guides, roadmap) — not committed
 /docs/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

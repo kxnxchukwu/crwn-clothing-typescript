@@ -1,4 +1,4 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import {
   persistStore,
   createTransform,
@@ -11,19 +11,8 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import userReducer from "../features/user-slice";
-import cartReducer, { CartState } from "../features/cart-slice";
-import directoryReducer from "../features/directory-slice";
-import shopReducer from "../features/shop-slice";
-import themeReducer from "../features/theme-slice";
-
-const rootReducer = combineReducers({
-  user: userReducer,
-  cart: cartReducer,
-  directory: directoryReducer,
-  shop: shopReducer,
-  theme: themeReducer,
-});
+import type { CartState } from "../features/cart-slice";
+import { rootReducer, type RootState } from "./root-reducer";
 
 // Persist cart items but not whether the dropdown is open, so every page load
 // starts with it closed (including for visitors who saved it open before).
@@ -36,7 +25,7 @@ const cartDropdownClosed = createTransform(
   { whitelist: ["cart"] },
 );
 
-const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
+const persistedReducer = persistReducer<RootState>(
   {
     key: "root",
     storage,
@@ -59,5 +48,5 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-export type RootState = ReturnType<typeof store.getState>;
+export type { RootState };
 export type AppDispatch = typeof store.dispatch;

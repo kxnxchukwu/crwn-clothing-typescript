@@ -42,5 +42,30 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/setupTests.ts",
+    // Playwright specs live in e2e/ and run separately.
+    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.{ts,tsx}", "netlify/functions/**/*.ts"],
+      exclude: [
+        "**/__tests__/**",
+        "src/test/**",
+        "src/setupTests.ts",
+        "src/vite-env.d.ts",
+        "src/main.tsx",
+      ],
+      reporter: ["text-summary", "html", "json-summary"],
+      // Floors just under current coverage, so it can only go up. Wiring
+      // (App routing, store setup, Firebase wrappers) is covered by e2e.
+      thresholds: {
+        statements: 80,
+        branches: 75,
+        functions: 78,
+        lines: 80,
+        // Money and state: hold these higher.
+        "netlify/functions/*.ts": { statements: 90, lines: 90 },
+        "src/features/**": { statements: 90, lines: 90 },
+      },
+    },
   },
 });

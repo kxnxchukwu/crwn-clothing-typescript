@@ -42,8 +42,12 @@ export default function CartDrawer(): ReactElement {
     };
   }, [isOpen]);
 
-  // Close when navigating (e.g. a link inside the drawer, or browser back).
+  // Close when navigating (e.g. a link inside the drawer, or browser back),
+  // but not on first mount.
+  const previousPathname = useRef(pathname);
   useEffect(() => {
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
     dispatch(setCartOpen(false));
   }, [pathname, dispatch]);
 
@@ -72,9 +76,10 @@ export default function CartDrawer(): ReactElement {
           <h2 id="cart-heading" className="text-base font-semibold">
             Your cart
             {itemCount > 0 && (
-              <span className="ml-1.5 font-normal text-muted">
-                ({itemCount})
-              </span>
+              <>
+                {" "}
+                <span className="font-normal text-muted">({itemCount})</span>
+              </>
             )}
           </h2>
           <button
