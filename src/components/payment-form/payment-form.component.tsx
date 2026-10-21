@@ -4,7 +4,11 @@ import { StripeCardElementOptions } from "@stripe/stripe-js";
 import { useSelector } from "react-redux";
 import { Info, LoaderCircle, Lock } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
-import { clearCart, selectCartTotal } from "../../features/cart-slice";
+import {
+  clearCart,
+  selectCartItems,
+  selectCartTotal,
+} from "../../features/cart-slice";
 import { selectCurrentUser } from "../../features/user-slice";
 import { selectTheme } from "../../features/theme-slice";
 import { stripePromise } from "../../stripe/stripe.utils";
@@ -28,6 +32,7 @@ export default function PaymentForm({
   const stripe = useStripe();
   const elements = useElements();
   const amount = useSelector(selectCartTotal);
+  const cartItems = useSelector(selectCartItems);
   const currentUser = useSelector(selectCurrentUser);
   const theme = useSelector(selectTheme) === "dark" ? "dark" : "light";
   const [isProcessing, setIsProcessing] = useState(false);
@@ -59,16 +64,25 @@ export default function PaymentForm({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: Math.round(amount * 100) }),
+          // Only ids and quantities: the server prices the order itself.
+          body: JSON.stringify({
+            items: cartItems.map(({ id, quantity }) => ({ id, quantity })),
+          }),
         },
       );
-      const clientSecret: string | undefined = response.ok
-        ? (await response.json()).paymentIntent?.client_secret
-        : undefined;
-      if (!clientSecret) {
-        setError("We couldn't start your payment. Please try again.");
+      const data: { clientSecret?: string; amount?: number; error?: string } =
+        await response.json().catch(() => ({}));
+      if (!response.ok || !data.clientSecret) {
+        setError(
+          data.error
+            ? `${data.error} Please try again.`
+            : "We couldn't start your payment. Please try again.",
+        );
         return;
       }
+      const { clientSecret } = data;
+      const chargedAmount =
+        typeof data.amount === "number" ? data.amount / 100 : amount;
 
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
@@ -83,7 +97,7 @@ export default function PaymentForm({
             "Your payment didn't go through. Please check your card details.",
         );
       } else if (result.paymentIntent.status === "succeeded") {
-        onSuccess(amount);
+        onSuccess(chargedAmount);
         dispatch(clearCart());
       }
     } catch {

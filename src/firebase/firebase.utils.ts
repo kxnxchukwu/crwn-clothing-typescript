@@ -18,18 +18,9 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import type { Item } from "../features/cart-slice";
+import { firebaseConfig } from "./config";
 
-const config = {
-  apiKey: "AIzaSyCA9r0mmqUQ566orymfuKk4_Ce9CCK0OiE",
-  authDomain: "crwn-clothing-db-c479f.firebaseapp.com",
-  projectId: "crwn-clothing-db-c479f",
-  storageBucket: "crwn-clothing-db-c479f.appspot.com",
-  messagingSenderId: "92011007969",
-  appId: "1:92011007969:web:e7d87400495cdb12024ca0",
-  measurementId: "G-SF5YK1EYJN",
-};
-
-const app = initializeApp(config);
+const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const firestore = getFirestore(app);
@@ -55,7 +46,7 @@ export interface UserProfile {
 // Creates users/{uid} on first sign-in, then returns the stored profile.
 export const createUserProfileDocument = async (
   userAuth: User,
-  additionalInfo: Record<string, unknown> = {}
+  additionalInfo: Record<string, unknown> = {},
 ): Promise<UserProfile> => {
   const userRef = doc(firestore, "users", userAuth.uid);
   let snapshot = await getDoc(userRef);
@@ -83,7 +74,7 @@ export const createUserProfileDocument = async (
 
 export const addCollectionAndDocuments = async (
   collectionKey: string,
-  documentsToAdd: DocumentData[]
+  documentsToAdd: DocumentData[],
 ) => {
   const collectionRef = collection(firestore, collectionKey);
   const batch = writeBatch(firestore);
@@ -96,7 +87,7 @@ export const addCollectionAndDocuments = async (
 };
 
 export const convertCollectionsSnapshotToMap = (
-  collections: QuerySnapshot<DocumentData>
+  collections: QuerySnapshot<DocumentData>,
 ) => {
   const transformedCollection: Collection[] = collections.docs.map((doc) => {
     const { title, items } = doc.data();
@@ -114,13 +105,13 @@ export const convertCollectionsSnapshotToMap = (
       accumulator[collection.title.toLowerCase()] = collection;
       return accumulator;
     },
-    {}
+    {},
   );
 };
 
 export const getCollections = async () =>
   convertCollectionsSnapshotToMap(
-    await getDocs(collection(firestore, "collections"))
+    await getDocs(collection(firestore, "collections")),
   );
 
 export const getCurrentUser = () =>
@@ -131,6 +122,6 @@ export const getCurrentUser = () =>
         unsubscribe();
         resolve(userAuth);
       },
-      reject
+      reject,
     );
   });
