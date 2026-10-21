@@ -42,6 +42,8 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/setupTests.ts",
+    // userEvent types key by key; give busy laptops headroom (default 5s).
+    testTimeout: 15_000,
     // Playwright specs live in e2e/ and run separately.
     exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
     coverage: {

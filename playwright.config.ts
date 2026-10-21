@@ -21,6 +21,8 @@ export default defineConfig({
     trace: "on-first-retry",
     // The PWA service worker would cache builds between runs.
     serviceWorkers: "block",
+    // SLOWMO=700 pauses that many ms between actions, to watch a test run.
+    launchOptions: { slowMo: Number(process.env.SLOWMO) || 0 },
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },

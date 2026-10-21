@@ -39,6 +39,7 @@ for (const theme of ["light", "dark"] as const) {
       test(`${name} has no serious accessibility violations`, async ({
         page,
       }) => {
+        test.slow(); // axe scans are heavy, especially in headed runs
         await page.goto(path);
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
         await expect(page.locator("main")).toBeVisible();
@@ -47,11 +48,26 @@ for (const theme of ["light", "dark"] as const) {
       });
     }
 
+    test("product cards are accessible while hovered", async ({ page }) => {
+      test.slow();
+      await page.goto("/shop/hats");
+      await waitForContent(page);
+      // Hover reveals the Add to cart button; scan it in that state.
+      await page.locator("main .group").first().hover();
+      await expect(
+        page.getByRole("button", { name: /^Add to cart:/ }).first(),
+      ).toBeVisible();
+      expect(await audit(page)).toEqual([]);
+    });
+
     test("cart drawer has no serious accessibility violations", async ({
       page,
     }) => {
+      test.slow();
       await page.goto("/shop/hats/1");
-      await page.getByRole("button", { name: "Add to cart" }).click();
+      await page
+        .getByRole("button", { name: "Add to cart", exact: true })
+        .click();
       await page.getByRole("button", { name: /^Cart, 1 item/ }).click();
       await expect(page.getByRole("dialog")).toBeVisible();
       expect(await audit(page)).toEqual([]);

@@ -20,7 +20,7 @@ test("a shopper can find a product and reach checkout", async ({ page }) => {
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Increase quantity" }).click();
-  await page.getByRole("button", { name: "Add to cart" }).click();
+  await page.getByRole("button", { name: "Add to cart", exact: true }).click();
   await expect(
     page.getByText(`2 × ${productName} added to cart`),
   ).toBeVisible();
@@ -43,7 +43,7 @@ test("a shopper can find a product and reach checkout", async ({ page }) => {
 test("the cart drawer closes with Escape and keeps items", async ({ page }) => {
   await page.goto("/shop/hats");
   await page.locator("main a.font-medium").first().click();
-  await page.getByRole("button", { name: "Add to cart" }).click();
+  await page.getByRole("button", { name: "Add to cart", exact: true }).click();
 
   await page.getByRole("button", { name: /^Cart, 1 item/ }).click();
   const drawer = page.getByRole("dialog", { name: /Your cart/ });

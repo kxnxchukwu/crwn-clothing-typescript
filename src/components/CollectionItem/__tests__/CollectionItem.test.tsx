@@ -29,14 +29,14 @@ describe("CollectionItem", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: "Add Brown Brim to cart" }),
+      screen.getByRole("button", { name: "Add to cart: Brown Brim" }),
     );
 
     expect(store.getState().cart.cartItems).toEqual([
       expect.objectContaining({ id: 1, quantity: 1 }),
     ]);
     expect(
-      screen.getByRole("button", { name: "Brown Brim added to cart" }),
+      screen.getByRole("button", { name: "Added to cart: Brown Brim" }),
     ).toBeInTheDocument();
     expect(toast.success).toHaveBeenCalledWith(
       "Brown Brim added to cart",
