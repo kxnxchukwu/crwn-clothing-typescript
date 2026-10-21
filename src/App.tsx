@@ -8,30 +8,30 @@ import {
 } from "react-router";
 import { ThemeProvider } from "styled-components";
 import { Toaster } from "sonner";
-import Header from "./components/header/header.component";
+import Header from "./components/Header/Header";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "./redux/hooks";
 import { selectCurrentUser, checkUserSession } from "./features/user-slice";
-import Spinner from "./components/spinner/spinner.component";
-import ErrorBoundary from "./components/error-boundary/error-boundary.component";
+import Spinner from "./components/Spinner/Spinner";
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { lightTheme, darkTheme } from "./themes";
 import { fetchCollections } from "./features/shop-slice";
-import NotFound from "./components/notfound/notfound.component";
+import NotFound from "./components/NotFound/NotFound";
 import { selectTheme } from "./features/theme-slice";
-import ProductDetailsPage from "./pages/productdetails/ProductDetails.component";
+import ProductDetailsPage from "./pages/ProductDetailsPage/ProductDetailsPage";
 
-const HomePage = lazy(() => import("./pages/homepage/homepage.component"));
+const HomePage = lazy(() => import("./pages/HomePage/HomePage"));
 const SignInAndSignUpPage = lazy(
-  () => import("./pages/sign-in-and-sign-up/sign-in-and-sign-up.component"),
+  () => import("./pages/SignInAndSignUpPage/SignInAndSignUpPage"),
 );
-const CheckoutPage = lazy(() => import("./pages/checkout/checkout.component"));
-const OrdersPage = lazy(() => import("./pages/orders/orders.component"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage/CheckoutPage"));
+const OrdersPage = lazy(() => import("./pages/OrdersPage/OrdersPage"));
 const CollectionsOverviewContainer = lazy(
   () =>
-    import("./components/collections-overview/collections-overview-container"),
+    import("./components/CollectionsOverviewContainer/CollectionsOverviewContainer"),
 );
 const CollectionPageContainer = lazy(
-  () => import("./components/collection/collection.container"),
+  () => import("./components/CollectionPageContainer/CollectionPageContainer"),
 );
 
 // Start each new page at the top instead of keeping the previous scroll position.
