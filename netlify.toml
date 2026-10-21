@@ -7,9 +7,10 @@
   NODE_VERSION = "22"
 
 [functions]
+  # Bundle everything, firebase-admin included. Left external, its jwks-rsa
+  # dependency require()s the ESM-only `jose`, which crashes on Node < 22.12
+  # (Netlify's function runtime). esbuild converts it to CommonJS instead.
   node_bundler = "esbuild"
-  # firebase-admin doesn't bundle cleanly; ship it as a normal dependency.
-  external_node_modules = ["firebase-admin"]
 
 # `netlify dev`: run Vite (port 3000, see vite.config.mts) behind Netlify's
 # proxy on 8888, which also serves the functions.
