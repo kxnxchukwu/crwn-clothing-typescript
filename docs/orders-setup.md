@@ -37,7 +37,9 @@ their own URL, so add a second endpoint (or use the Stripe CLI) to test them.
 Locally, with the [Stripe CLI](https://stripe.com/docs/stripe-cli):
 
 ```bash
-stripe listen --forward-to localhost:8888/.netlify/functions/stripe-webhook
+stripe listen \
+  --events payment_intent.succeeded,payment_intent.payment_failed \
+  --forward-to localhost:8888/.netlify/functions/stripe-webhook
 ```
 
 It prints a `whsec_…` secret to use as `STRIPE_WEBHOOK_SECRET` while it runs.
@@ -47,8 +49,11 @@ It prints a `whsec_…` secret to use as `STRIPE_WEBHOOK_SECRET` while it runs.
 Compare `firestore.rules` with your current rules in the console, then deploy:
 
 ```bash
-npx firebase-tools deploy --only firestore:rules --project crwn-clothing-db-c479f
+npx firebase-tools login
+npx firebase-tools deploy --only firestore:rules
 ```
+
+(`firebase.json` points at `firestore.rules`; `.firebaserc` sets the project.)
 
 The important parts: product `collections` are read-only, and users can read
 only their own `orders`.
