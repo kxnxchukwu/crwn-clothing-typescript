@@ -12,6 +12,7 @@ import {
 import { selectCurrentUser } from "../../features/user-slice";
 import { selectTheme } from "../../features/theme-slice";
 import { stripePromise } from "../../stripe/stripe.utils";
+import { auth } from "../../firebase/firebase.utils";
 import { formatPrice } from "../../utils/format";
 
 // The card field renders in Stripe's iframe, so it can't read our CSS
@@ -59,11 +60,16 @@ export default function PaymentForm({
     setIsProcessing(true);
     setError(null);
     try {
+      // Signed-in shoppers send their ID token so the order is saved to them.
+      const idToken = await auth.currentUser?.getIdToken();
       const response = await fetch(
         "/.netlify/functions/create-payment-intent",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(idToken && { Authorization: `Bearer ${idToken}` }),
+          },
           // Only ids and quantities: the server prices the order itself.
           body: JSON.stringify({
             items: cartItems.map(({ id, quantity }) => ({ id, quantity })),

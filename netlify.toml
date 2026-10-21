@@ -5,3 +5,8 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "esbuild"
+  # firebase-admin doesn't bundle cleanly; ship it as a normal dependency.
+  external_node_modules = ["firebase-admin"]

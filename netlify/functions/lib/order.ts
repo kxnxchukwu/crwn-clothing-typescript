@@ -66,3 +66,22 @@ export const computeTotalCents = (
   }
   return { ok: true, value: total };
 };
+
+export interface OrderItem {
+  id: number;
+  name: string;
+  imageUrl: string;
+  price: number; // euros, as charged
+  quantity: number;
+}
+
+// Snapshot of what was bought, so later catalogue changes don't alter
+// past orders. Assumes lines were already priced with computeTotalCents.
+export const toOrderItems = (
+  lines: OrderLine[],
+  catalogue: Map<number, { name: string; price: number; imageUrl: string }>,
+): OrderItem[] =>
+  lines.map(({ id, quantity }) => {
+    const { name, price, imageUrl } = catalogue.get(id)!;
+    return { id, name, imageUrl, price, quantity };
+  });

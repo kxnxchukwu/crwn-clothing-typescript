@@ -7,6 +7,7 @@ import {
   selectCartItemsCount,
   selectCartTotal,
 } from "../../features/cart-slice";
+import { selectCurrentUser } from "../../features/user-slice";
 import CartLine from "../../components/cart-line/cart-line.component";
 import PaymentForm from "../../components/payment-form/payment-form.component";
 import { formatPrice } from "../../utils/format";
@@ -18,6 +19,7 @@ export default function CheckoutPage(): ReactElement {
   const total = useSelector(selectCartTotal);
   const cartItems = useSelector(selectCartItems);
   const itemCount = useSelector(selectCartItemsCount);
+  const currentUser = useSelector(selectCurrentUser);
   const [paidAmount, setPaidAmount] = useState<number | null>(null);
 
   if (paidAmount !== null) {
@@ -30,9 +32,19 @@ export default function CheckoutPage(): ReactElement {
         <p className="mt-3 text-muted">
           Your payment of {formatPrice(paidAmount)} went through.
         </p>
-        <Link to="/shop" className={`${primaryLinkClass} mt-8`}>
-          Continue shopping
-        </Link>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Link to="/shop" className={primaryLinkClass}>
+            Continue shopping
+          </Link>
+          {currentUser && (
+            <Link
+              to="/orders"
+              className="inline-flex h-11 items-center justify-center rounded-md border border-line px-6 text-sm font-medium transition-colors hover:bg-surface"
+            >
+              View your orders
+            </Link>
+          )}
+        </div>
       </div>
     );
   }

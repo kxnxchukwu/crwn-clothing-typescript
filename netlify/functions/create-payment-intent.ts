@@ -1,7 +1,9 @@
 import type { Handler } from "@netlify/functions";
 import Stripe from "stripe";
-import { computeTotalCents, parseOrderLines } from "./lib/order";
-import { loadPrices } from "./lib/prices";
+import { FieldValue } from "firebase-admin/firestore";
+import { computeTotalCents, parseOrderLines, toOrderItems } from "./lib/order";
+import { loadCatalogue } from "./lib/catalogue";
+import { getAdmin } from "./lib/admin";
 
 const json = (statusCode: number, body: unknown) => ({
   statusCode,
@@ -11,6 +13,8 @@ const json = (statusCode: number, body: unknown) => ({
 
 // Creates a PaymentIntent for the cart. The client sends item ids and
 // quantities only; the amount is computed here from Firestore prices.
+// When Firebase Admin is configured, it also records a pending order
+// (orders/{paymentIntentId}) that the Stripe webhook later marks as paid.
 const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return json(405, { error: "Method not allowed." });
@@ -32,8 +36,26 @@ const handler: Handler = async (event) => {
   const lines = parseOrderLines(body);
   if (!lines.ok) return json(400, { error: lines.error });
 
+  const admin = getAdmin();
+
+  // Signed-in shoppers send their Firebase ID token so the order is theirs.
+  let user: { uid: string; email: string | null } | null = null;
+  const token = event.headers.authorization?.replace(/^Bearer\s+/i, "");
+  if (admin && token) {
+    try {
+      const decoded = await admin.auth.verifyIdToken(token);
+      user = { uid: decoded.uid, email: decoded.email ?? null };
+    } catch {
+      return json(401, { error: "Your session has expired. Sign in again." });
+    }
+  }
+
   try {
-    const total = computeTotalCents(lines.value, await loadPrices());
+    const catalogue = await loadCatalogue();
+    const prices = new Map(
+      [...catalogue].map(([id, { price }]) => [id, price] as const),
+    );
+    const total = computeTotalCents(lines.value, prices);
     if (!total.ok) return json(400, { error: total.error });
 
     const stripe = new Stripe(secretKey, { apiVersion: "2022-11-15" });
@@ -45,8 +67,25 @@ const handler: Handler = async (event) => {
         items: lines.value
           .map(({ id, quantity }) => `${id}x${quantity}`)
           .join(","),
+        userId: user?.uid ?? "",
       },
     });
+
+    if (admin) {
+      await admin.db
+        .collection("orders")
+        .doc(paymentIntent.id)
+        .set({
+          status: "pending",
+          userId: user?.uid ?? null,
+          email: user?.email ?? null,
+          items: toOrderItems(lines.value, catalogue),
+          total: total.value,
+          currency: "eur",
+          paymentIntentId: paymentIntent.id,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+    }
 
     return json(200, {
       clientSecret: paymentIntent.client_secret,

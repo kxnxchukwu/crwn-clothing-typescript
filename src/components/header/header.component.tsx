@@ -86,7 +86,14 @@ export default function Header(): ReactElement {
         </nav>
 
         <div className="ml-auto flex items-center gap-1">
-          <div className="mr-3 hidden md:block">{account}</div>
+          <div className="mr-3 hidden items-center gap-6 md:flex">
+            {currentUser && (
+              <NavLink to="/orders" className={navLinkClass}>
+                Orders
+              </NavLink>
+            )}
+            {account}
+          </div>
           <ThemeToggler className={iconButtonClass} />
           <CartIcon className={iconButtonClass} />
         </div>
@@ -105,6 +112,13 @@ export default function Header(): ReactElement {
                 </NavLink>
               </li>
             ))}
+            {currentUser && (
+              <li>
+                <NavLink to="/orders" className={navLinkClass}>
+                  Your orders
+                </NavLink>
+              </li>
+            )}
             <li className="flex items-center gap-2 border-t border-line pt-4">
               <User className="size-4 text-muted" aria-hidden="true" />
               {account}

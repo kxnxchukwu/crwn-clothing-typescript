@@ -25,11 +25,15 @@ interface SignUpDetails extends EmailAndPassword {
 interface UserState {
   currentUser: UserProfile | null;
   error: string | null;
+  // False until the first session check finishes, so pages that need a user
+  // can wait instead of treating "not known yet" as "signed out".
+  sessionChecked: boolean;
 }
 
 const initialState: UserState = {
   currentUser: null,
   error: null,
+  sessionChecked: false,
 };
 
 const errorMessage = (error: unknown) =>
@@ -45,7 +49,7 @@ export const checkUserSession = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
-  }
+  },
 );
 
 export const signInWithGoogle = createAsyncThunk(
@@ -57,7 +61,7 @@ export const signInWithGoogle = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
-  }
+  },
 );
 
 export const signInWithEmail = createAsyncThunk(
@@ -69,26 +73,26 @@ export const signInWithEmail = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
-  }
+  },
 );
 
 export const signUp = createAsyncThunk(
   "user/signUp",
   async (
     { email, password, displayName }: SignUpDetails,
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       return await createUserProfileDocument(user, { displayName });
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
-  }
+  },
 );
 
 export const signOut = createAsyncThunk(
@@ -99,7 +103,7 @@ export const signOut = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
-  }
+  },
 );
 
 const userSlice = createSlice({
@@ -111,6 +115,10 @@ const userSlice = createSlice({
       .addCase(checkUserSession.fulfilled, (state, action) => {
         state.currentUser = action.payload;
         state.error = null;
+        state.sessionChecked = true;
+      })
+      .addCase(checkUserSession.rejected, (state) => {
+        state.sessionChecked = true;
       })
       .addCase(signInWithGoogle.fulfilled, (state, action) => {
         state.currentUser = action.payload;
@@ -134,14 +142,17 @@ const userSlice = createSlice({
           signInWithGoogle,
           signInWithEmail,
           signUp,
-          signOut
+          signOut,
         ),
         (state, action) => {
           state.error = (action.payload as string) ?? action.error.message;
-        }
+        },
       );
   },
 });
+
+export const selectIsSessionChecked = (state: { user: UserState }) =>
+  state.user.sessionChecked;
 
 export const selectCurrentUser = (state: { user: UserState }) =>
   state.user.currentUser;
