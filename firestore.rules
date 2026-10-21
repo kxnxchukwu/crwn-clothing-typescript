@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Proposed rules for CRWN Clothing. Review against your current rules in the
+// Firebase console before deploying (firebase deploy --only firestore:rules).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Product catalogue: public, read-only. Prices here are what the payment
+    // function charges, so nobody may write them from a browser.
+    match /collections/{collectionId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Profiles: each signed-in user can read and write only their own.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Orders: written only by the Netlify functions (Admin SDK bypasses these
+    // rules). Signed-in users can read their own orders and nothing else.
+    match /orders/{orderId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+  }
+}

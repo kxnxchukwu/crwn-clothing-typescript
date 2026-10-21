@@ -4,7 +4,7 @@ import {
   ErrorImageContainer,
   ErrorImageText,
 } from "./error-boundary.styles";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 interface Props {
   children: ReactElement;

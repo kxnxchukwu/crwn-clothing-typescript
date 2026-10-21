@@ -1,26 +1,24 @@
 import { ReactElement } from "react";
-import "./ThemeToggler.styles.scss";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { Moon, Sun } from "lucide-react";
+import { useAppDispatch } from "../../redux/hooks";
 import { selectTheme, toggleTheme } from "../../features/theme-slice";
 
-export default function ThemeToggler(): ReactElement {
-  const dispatch = useDispatch();
-  const checked = useSelector(selectTheme) === "dark";
+export default function ThemeToggler({
+  className,
+}: {
+  className?: string;
+}): ReactElement {
+  const dispatch = useAppDispatch();
+  const isDark = useSelector(selectTheme) === "dark";
   return (
-    <>
-      {" "}
-      <input
-        onClick={() => dispatch(toggleTheme())}
-        type="checkbox"
-        className="checkbox"
-        id="checkbox"
-        defaultChecked={checked}
-      />
-      <label htmlFor="checkbox" className="checkbox-label">
-        <i className="fas fa-moon"></i>
-        <i className="fas fa-sun"></i>
-        <span className="ball"></span>
-      </label>
-    </>
+    <button
+      type="button"
+      className={className}
+      onClick={() => dispatch(toggleTheme())}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+    >
+      {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+    </button>
   );
 }

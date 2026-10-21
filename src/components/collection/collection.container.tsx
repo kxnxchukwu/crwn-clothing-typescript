@@ -1,35 +1,70 @@
 import { ReactElement } from "react";
-import "./collection.styles.scss";
-import CollectionItem from "../collection-item/collection-item.component";
+import { Link, useParams } from "react-router";
+import { ChevronRight } from "lucide-react";
 import { useSelector } from "react-redux";
+import CollectionItem from "../collection-item/collection-item.component";
+import {
+  ProductGrid,
+  ProductGridSkeleton,
+} from "../product-grid/product-grid.component";
+import NotFound from "../notfound/notfound.component";
 import {
   selectCollection,
   selectIsCollectionFetching,
 } from "../../features/shop-slice";
-import { useParams } from "react-router-dom";
-import { Item } from "../../features/cart-slice";
-import Spinner from "../spinner/spinner.component";
 
 export default function CollectionPageContainer(): ReactElement {
-  const { id } = useParams();
+  const { id = "" } = useParams();
 
   const isFetching = useSelector(selectIsCollectionFetching);
+  const collection = useSelector(selectCollection(id));
 
-  const collection = useSelector(selectCollection(id as string));
-  if (isFetching) {
-    return <Spinner />;
+  if (!isFetching && !collection) {
+    return <NotFound />;
   }
 
-  console.log(collection);
-  const { title, items } = collection;
   return (
-    <div className="collection-page">
-      <h2 className="title">{title.toUpperCase()}</h2>
-      <div className="items">
-        {items.map((item: Item) => (
-          <CollectionItem key={item.id} item={item} title={title} />
-        ))}
-      </div>
+    <div className="space-y-8">
+      <header>
+        <nav aria-label="Breadcrumb" className="text-sm text-muted">
+          <ol className="flex items-center gap-1.5">
+            <li>
+              <Link to="/shop" className="hover:text-foreground">
+                Shop
+              </Link>
+            </li>
+            <li aria-hidden="true">
+              <ChevronRight className="size-3.5" />
+            </li>
+            <li aria-current="page" className="text-foreground capitalize">
+              {collection?.title ?? id}
+            </li>
+          </ol>
+        </nav>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight capitalize sm:text-4xl">
+          {collection?.title ?? id}
+        </h1>
+        {collection && (
+          <p className="mt-2 text-sm text-muted">
+            {collection.items.length}{" "}
+            {collection.items.length === 1 ? "product" : "products"}
+          </p>
+        )}
+      </header>
+
+      {collection ? (
+        <ProductGrid>
+          {collection.items.map((item) => (
+            <CollectionItem
+              key={item.id}
+              item={item}
+              title={collection.title}
+            />
+          ))}
+        </ProductGrid>
+      ) : (
+        <ProductGridSkeleton count={8} />
+      )}
     </div>
   );
 }

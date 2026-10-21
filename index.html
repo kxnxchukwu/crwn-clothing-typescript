@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <meta name="theme-color" content="#fff" />
+    <meta name="description" content="CRWN Clothing" />
+    <meta
+      name="image"
+      content="https://res.cloudinary.com/kxnxchukwu/image/upload/v1692038321/Screenshot_2023-08-14_at_19.36.51_kpzfpv.png"
+    />
+    <meta property="og:title" content="CRWN Clothing" />
+    <meta
+      property="og:description"
+      content="eCommerce Website build with React"
+    />
+    <meta
+      property="og:image"
+      content="https://res.cloudinary.com/kxnxchukwu/image/upload/v1692038321/Screenshot_2023-08-14_at_19.36.51_kpzfpv.png"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:image"
+      content="https://res.cloudinary.com/kxnxchukwu/image/upload/v1692038321/Screenshot_2023-08-14_at_19.36.51_kpzfpv.png"
+    />
+    <meta name="twitter:creator" content="@kxnxchukwu" />
+    <meta name="twitter:title" content="CRWN Clothing" />
+    <meta
+      name="twitter:description"
+      content="eCommerce Website built with React"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="" />
+    <meta property="og:title" content="CRWN Clothing" />
+    <meta
+      property="og:description"
+      content="eCommerce Website built with React"
+    />
+    <meta
+      property="og:image"
+      content="https://res.cloudinary.com/kxnxchukwu/image/upload/v1692038321/Screenshot_2023-08-14_at_19.36.51_kpzfpv.png"
+    />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <title>CRWN Clothing</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a light flash.
+      try {
+        var saved = JSON.parse(localStorage.getItem("persist:root") || "{}");
+        var theme = saved.theme && JSON.parse(saved.theme).theme;
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

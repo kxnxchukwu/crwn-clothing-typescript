@@ -26,3 +26,9 @@ yarn-error.log*
 # Local Netlify folder
 .netlify
 .gitignore
+# Vite
+/dist
+dev-dist
+
+# Local notes (baseline checklist, setup guides, roadmap) — not committed
+/docs/

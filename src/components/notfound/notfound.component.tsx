@@ -4,7 +4,7 @@ import {
   ErrorImageContainer,
   ErrorImageText,
 } from "./notfound.styles";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export interface NotFoundProps {
   message?: string;

@@ -1,12 +1,31 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "jsx": "react-jsx",
-    "module": "ES2022",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
     "strict": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "types": [
+      "vitest/globals",
+      "@testing-library/jest-dom"
+    ]
+  },
+  "include": [
+    "src",
+    "netlify/functions",
+    "tests",
+    "vite.config.mts"
+  ]
 }

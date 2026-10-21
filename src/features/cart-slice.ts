@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { signOut } from "./user-slice";
 
 export interface Item {
   name: string;
@@ -8,12 +9,12 @@ export interface Item {
   id: number;
 }
 
-interface CartState {
+export interface CartState {
   cartItems: Item[];
   hidden: boolean;
 }
 
-const initialState: CartState = { cartItems: [], hidden: false } as CartState;
+const initialState: CartState = { cartItems: [], hidden: true };
 
 export const cartSlice = createSlice({
   name: "cart",
@@ -21,15 +22,14 @@ export const cartSlice = createSlice({
   reducers: {
     addItem: (state, action: PayloadAction<{ item: Item }>) => {
       const existingCartItem = state.cartItems.find(
-        (cartItem) => cartItem.id === action.payload.item.id
+        (cartItem) => cartItem.id === action.payload.item.id,
       );
 
       if (existingCartItem) {
-        console.log("here");
         const newCartItemsState = state.cartItems.map((cartItem) =>
           cartItem.id === action.payload.item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
+            : cartItem,
         );
 
         state.cartItems = newCartItemsState;
@@ -44,12 +44,12 @@ export const cartSlice = createSlice({
     },
     removeCartItem: (state, action: PayloadAction<{ item: Item }>) => {
       const existingCartItem = state.cartItems.find(
-        (cartItem) => cartItem.id === action.payload.item.id
+        (cartItem) => cartItem.id === action.payload.item.id,
       );
 
       if (existingCartItem?.quantity === 1) {
         const newCartItemsState = state.cartItems.filter(
-          (cartItem) => cartItem.id !== action.payload.item.id
+          (cartItem) => cartItem.id !== action.payload.item.id,
         );
 
         state.cartItems = newCartItemsState;
@@ -57,28 +57,33 @@ export const cartSlice = createSlice({
         const newCartItemsState = state.cartItems.map((cartItem) =>
           cartItem.id === action.payload.item.id
             ? { ...cartItem, quantity: cartItem.quantity - 1 }
-            : cartItem
+            : cartItem,
         );
         state.cartItems = newCartItemsState;
       }
     },
     clearItemFromCart: (state, action: PayloadAction<{ item: Item }>) => {
       const newCartItemsState = state.cartItems.filter(
-        (cartItem) => cartItem.id !== action.payload.item.id
+        (cartItem) => cartItem.id !== action.payload.item.id,
       );
       state.cartItems = newCartItemsState;
     },
     clearCart: (state) => {
       state.cartItems = [];
     },
-    toggleCartHidden: (state) => {
-      state.hidden = !state.hidden;
+    setCartOpen: (state, action: PayloadAction<boolean>) => {
+      state.hidden = !action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signOut.fulfilled, (state) => {
+      state.cartItems = [];
+    });
   },
 });
 
 export const {
-  toggleCartHidden,
+  setCartOpen,
   addItem,
   removeCartItem,
   clearItemFromCart,
@@ -95,14 +100,14 @@ export const selectCartItemsCount = (state: { cart: CartState }) =>
   state.cart.cartItems.reduce(
     (accumalatedQuantity: number, cartItems: Item) =>
       accumalatedQuantity + cartItems.quantity,
-    0
+    0,
   );
 
 export const selectCartTotal = (state: { cart: CartState }) =>
   state.cart.cartItems.reduce(
     (accumalatedQuantity: number, cartItems: Item) =>
       accumalatedQuantity + cartItems.quantity * cartItems.price,
-    0
+    0,
   );
 
 export default cartSlice.reducer;

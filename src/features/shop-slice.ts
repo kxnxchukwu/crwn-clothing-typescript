@@ -1,55 +1,43 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { createSelector } from "@reduxjs/toolkit";
-import { Item } from "./cart-slice";
-
-interface CollectionItem {
-  id: string;
-  items: Item[];
-  routeName: string;
-  title: string;
-}
+import { Collection, getCollections } from "../firebase/firebase.utils";
 
 interface ShopState {
-  collections: { [key: string]: CollectionItem };
-  isFetching: boolean;
+  collections: Record<string, Collection>;
+  status: "idle" | "loading" | "succeeded" | "failed";
   errorMessage: string | undefined;
 }
 
 const initialState: ShopState = {
-  collections: {} as { [key: string]: CollectionItem },
-  isFetching: false,
+  collections: {},
+  status: "idle",
   errorMessage: undefined,
 };
+
+export const fetchCollections = createAsyncThunk(
+  "shop/fetchCollections",
+  getCollections
+);
 
 export const shopSlice = createSlice({
   name: "shop",
   initialState,
-  reducers: {
-    fetchCollectionsStart: (state) => {
-      state.isFetching = true;
-    },
-    fetchCollectionsSuccess: (
-      state,
-      action: PayloadAction<{ collections: { [key: string]: CollectionItem } }>
-    ) => {
-      state.isFetching = false;
-      state.collections = action.payload.collections;
-    },
-    fetchCollectionsFailure: (
-      state,
-      action: PayloadAction<{ message: string }>
-    ) => {
-      state.isFetching = false;
-      state.errorMessage = action.payload.message;
-    },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCollections.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchCollections.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.collections = action.payload;
+      })
+      .addCase(fetchCollections.rejected, (state, action) => {
+        state.status = "failed";
+        state.errorMessage = action.error.message;
+      });
   },
 });
-
-export const {
-  fetchCollectionsStart,
-  fetchCollectionsSuccess,
-  fetchCollectionsFailure,
-} = shopSlice.actions;
 
 export const selectShop = (state: { shop: ShopState }) => state.shop;
 
@@ -58,23 +46,20 @@ export const selectCollections = (state: { shop: ShopState }) =>
 
 export const selectCollectionsForPreview = createSelector(
   [selectCollections],
-  (collections) =>
-    Object.keys(collections).map((key) => collections[key]) as CollectionItem[]
+  (collections) => Object.values(collections)
 );
 
+// Undefined until collections have loaded, or if the URL names no collection.
 export const selectCollection = (collectionUrlParam: string) =>
-  createSelector([selectCollections], (collections) => {
-    return collections[collectionUrlParam] as CollectionItem;
-  });
+  createSelector(
+    [selectCollections],
+    (collections): Collection | undefined => collections[collectionUrlParam]
+  );
 
+// True until the first fetch settles, so pages never render with no data.
 export const selectIsCollectionFetching = createSelector(
   [selectShop],
-  (shop) => shop.isFetching
-);
-
-export const selectIsCollectionsLoaded = createSelector(
-  [selectShop],
-  (shop) => !!shop.collections
+  (shop) => shop.status === "idle" || shop.status === "loading"
 );
 
 export default shopSlice.reducer;

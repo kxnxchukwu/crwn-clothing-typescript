@@ -1,70 +1,95 @@
-import firebase from "firebase/compat/app";
-import "firebase/compat/firestore";
-import "firebase/compat/auth";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  User,
+} from "firebase/auth";
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  writeBatch,
+  QuerySnapshot,
+  DocumentData,
+  Timestamp,
+} from "firebase/firestore";
+import type { Item } from "../features/cart-slice";
+import { firebaseConfig } from "./config";
 
-const config = {
-  apiKey: "AIzaSyCA9r0mmqUQ566orymfuKk4_Ce9CCK0OiE",
-  authDomain: "crwn-clothing-db-c479f.firebaseapp.com",
-  projectId: "crwn-clothing-db-c479f",
-  storageBucket: "crwn-clothing-db-c479f.appspot.com",
-  messagingSenderId: "92011007969",
-  appId: "1:92011007969:web:e7d87400495cdb12024ca0",
-  measurementId: "G-SF5YK1EYJN",
-};
+const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const app = firebase.initializeApp(config);
+export const auth = getAuth(app);
+export const firestore = getFirestore(app);
 
-export const signInWithGoogle = () => auth.signInWithPopup(googleProvider);
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
+
+export interface Collection {
+  id: string;
+  items: Item[];
+  routeName: string;
+  title: string;
+}
+
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  email: string;
+  // ISO string so the profile stays serializable in Redux.
+  createdAt: string | null;
+}
+
+// Creates users/{uid} on first sign-in, then returns the stored profile.
 export const createUserProfileDocument = async (
-  userAuth: any,
-  additionalInfo: any
-) => {
-  if (!userAuth) return;
-  const userRef = firestore.doc(`users/${userAuth.uid}`);
-  const snapShot = await userRef.get();
+  userAuth: User,
+  additionalInfo: Record<string, unknown> = {},
+): Promise<UserProfile> => {
+  const userRef = doc(firestore, "users", userAuth.uid);
+  let snapshot = await getDoc(userRef);
 
-  if (!snapShot) {
-    console.log("No Matching Documents.");
-    return;
-  }
-
-  if (!snapShot.exists) {
+  if (!snapshot.exists()) {
     const { displayName, email } = userAuth;
-    const createdAt = new Date();
-
-    try {
-      await userRef.set({
-        displayName,
-        email,
-        createdAt,
-        ...additionalInfo,
-      });
-    } catch (error: any) {
-      console.log("Error Creating The User", error.message);
-    }
+    await setDoc(userRef, {
+      displayName,
+      email,
+      createdAt: new Date(),
+      ...additionalInfo,
+    });
+    snapshot = await getDoc(userRef);
   }
-  return userRef;
+
+  const { displayName, email, createdAt } = snapshot.data() ?? {};
+  return {
+    id: snapshot.id,
+    displayName,
+    email,
+    createdAt:
+      createdAt instanceof Timestamp ? createdAt.toDate().toISOString() : null,
+  };
 };
 
 export const addCollectionAndDocuments = async (
-  collectionKey: any,
-  documentsToAdd: any
+  collectionKey: string,
+  documentsToAdd: DocumentData[],
 ) => {
-  const collectionRef = firestore.collection(collectionKey);
-  const batch = firestore.batch();
+  const collectionRef = collection(firestore, collectionKey);
+  const batch = writeBatch(firestore);
 
-  documentsToAdd.forEach((document: any) => {
-    const newDocRef = collectionRef.doc();
-    batch.set(newDocRef, document);
+  documentsToAdd.forEach((document) => {
+    batch.set(doc(collectionRef), document);
   });
 
   return await batch.commit();
 };
 
-export const convertCollectionsSnapshotToMap = (collections: any) => {
-  const transformedCollection = collections.docs.map((doc: any) => {
+export const convertCollectionsSnapshotToMap = (
+  collections: QuerySnapshot<DocumentData>,
+) => {
+  const transformedCollection: Collection[] = collections.docs.map((doc) => {
     const { title, items } = doc.data();
 
     return {
@@ -75,25 +100,28 @@ export const convertCollectionsSnapshotToMap = (collections: any) => {
     };
   });
 
-  return transformedCollection.reduce((accumulator: any, collection: any) => {
-    accumulator[collection.title.toLowerCase()] = collection;
-    return accumulator;
-  }, {});
+  return transformedCollection.reduce<Record<string, Collection>>(
+    (accumulator, collection) => {
+      accumulator[collection.title.toLowerCase()] = collection;
+      return accumulator;
+    },
+    {},
+  );
 };
 
-export const getCurrentUser = () => {
-  return new Promise((resolve, reject) => {
-    const unsubscribe = auth.onAuthStateChanged((userAuth) => {
-      unsubscribe();
-      resolve(userAuth);
-    }, reject);
+export const getCollections = async () =>
+  convertCollectionsSnapshotToMap(
+    await getDocs(collection(firestore, "collections")),
+  );
+
+export const getCurrentUser = () =>
+  new Promise<User | null>((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (userAuth) => {
+        unsubscribe();
+        resolve(userAuth);
+      },
+      reject,
+    );
   });
-};
-
-export const auth = firebase.auth();
-export const firestore = firebase.firestore();
-
-export const googleProvider = new firebase.auth.GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
-
-export default firebase;

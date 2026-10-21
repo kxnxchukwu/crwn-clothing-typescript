@@ -1,13 +1,8 @@
-import React, { ReactElement } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { ReactElement } from "react";
+import { Link } from "react-router";
+import { ArrowRight } from "lucide-react";
 import CollectionItem from "../collection-item/collection-item.component";
-
-import {
-  CollectionPreviewContainer,
-  TitleContainer,
-  PreviewContainer,
-} from "./collection-preview.styles";
+import { ProductGrid } from "../product-grid/product-grid.component";
 import { Item } from "../../features/cart-slice";
 
 export interface CollectionPreviewProps {
@@ -19,20 +14,31 @@ export default function CollectionPreview({
   title,
   items,
 }: CollectionPreviewProps): ReactElement {
-  const navigate = useNavigate();
+  const headingId = `collection-${title.toLowerCase()}`;
 
   return (
-    <CollectionPreviewContainer>
-      <TitleContainer onClick={() => navigate(`${title.toLowerCase()}`)}>
-        {title.toUpperCase()}
-      </TitleContainer>
-      <PreviewContainer>
-        {items
-          .filter((item, idx) => idx < 4)
-          .map((item) => (
-            <CollectionItem key={item.id} item={item} title={title} />
-          ))}
-      </PreviewContainer>
-    </CollectionPreviewContainer>
+    <section aria-labelledby={headingId}>
+      <div className="mb-6 flex items-baseline justify-between gap-4">
+        <h2 id={headingId} className="text-xl font-semibold tracking-tight">
+          {title}
+        </h2>
+        <Link
+          to={`/shop/${title.toLowerCase()}`}
+          className="group flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
+        >
+          View all
+          <span className="sr-only"> {title}</span>
+          <ArrowRight
+            className="size-4 transition-transform group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </Link>
+      </div>
+      <ProductGrid>
+        {items.slice(0, 4).map((item) => (
+          <CollectionItem key={item.id} item={item} title={title} />
+        ))}
+      </ProductGrid>
+    </section>
   );
 }
