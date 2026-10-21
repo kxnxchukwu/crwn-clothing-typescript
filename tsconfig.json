@@ -25,6 +25,7 @@
   "include": [
     "src",
     "netlify/functions",
+    "tests",
     "vite.config.mts"
   ]
 }

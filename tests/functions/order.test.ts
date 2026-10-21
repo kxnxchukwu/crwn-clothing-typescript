@@ -3,7 +3,7 @@ import {
   MAX_LINES,
   MAX_QUANTITY,
   parseOrderLines,
-} from "./order";
+} from "../../netlify/functions/lib/order";
 
 const prices = new Map([
   [1, 25],

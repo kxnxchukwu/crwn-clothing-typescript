@@ -16,7 +16,7 @@ vi.mock("firebase-admin/firestore", () => ({
   FieldValue: { serverTimestamp: () => "SERVER_TIME" },
 }));
 
-vi.mock("./lib/admin", () => ({
+vi.mock("../../netlify/functions/lib/admin", () => ({
   getAdmin: () =>
     adminConfigured
       ? {
@@ -37,7 +37,7 @@ vi.mock("./lib/admin", () => ({
       : null,
 }));
 
-const { handler } = await import("./stripe-webhook");
+const { handler } = await import("../../netlify/functions/stripe-webhook");
 
 const call = async (body = "{}") => {
   const response = await handler(

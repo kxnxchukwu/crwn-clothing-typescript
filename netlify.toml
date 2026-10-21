@@ -10,3 +10,11 @@
   node_bundler = "esbuild"
   # firebase-admin doesn't bundle cleanly; ship it as a normal dependency.
   external_node_modules = ["firebase-admin"]
+
+# `netlify dev`: run Vite (port 3000, see vite.config.mts) behind Netlify's
+# proxy on 8888, which also serves the functions.
+[dev]
+  framework = "#custom"
+  command = "npm run dev"
+  targetPort = 3000
+  port = 8888

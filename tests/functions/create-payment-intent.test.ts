@@ -17,7 +17,7 @@ vi.mock("firebase-admin/firestore", () => ({
   FieldValue: { serverTimestamp: () => "SERVER_TIME" },
 }));
 
-vi.mock("./lib/admin", () => ({
+vi.mock("../../netlify/functions/lib/admin", () => ({
   getAdmin: () =>
     adminConfigured
       ? {
@@ -27,7 +27,7 @@ vi.mock("./lib/admin", () => ({
       : null,
 }));
 
-vi.mock("./lib/catalogue", () => ({
+vi.mock("../../netlify/functions/lib/catalogue", () => ({
   loadCatalogue: vi.fn(
     async () =>
       new Map([
@@ -37,7 +37,7 @@ vi.mock("./lib/catalogue", () => ({
   ),
 }));
 
-const { handler } = await import("./create-payment-intent");
+const { handler } = await import("../../netlify/functions/create-payment-intent");
 
 const call = async (
   body: unknown,
