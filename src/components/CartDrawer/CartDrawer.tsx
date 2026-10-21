@@ -103,6 +103,8 @@ export default function CartDrawer(): ReactElement {
             </div>
             <Link
               to="/shop"
+              // Close explicitly: already on /shop, the URL doesn't change.
+              onClick={close}
               className="mt-2 inline-flex h-11 items-center rounded-md bg-foreground px-6 text-sm font-medium text-background transition-opacity hover:opacity-90"
             >
               Start shopping

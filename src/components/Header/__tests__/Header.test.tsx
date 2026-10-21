@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { toast } from "sonner";
 import Header from "../Header";
 import { hat, renderWithProviders, signedInUser } from "../../../test/render";
@@ -74,6 +74,16 @@ describe("Header", () => {
     expect(document.getElementById("mobile-menu")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Close menu" }));
+    expect(document.getElementById("mobile-menu")).not.toBeInTheDocument();
+  });
+
+  it("closes the mobile menu when a link to the current page is tapped", async () => {
+    const { user } = renderWithProviders(<Header />, { route: "/shop" });
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const menu = document.getElementById("mobile-menu")!;
+
+    await user.click(within(menu).getByRole("link", { name: "Shop" }));
+
     expect(document.getElementById("mobile-menu")).not.toBeInTheDocument();
   });
 
