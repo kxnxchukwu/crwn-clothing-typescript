@@ -15,5 +15,12 @@
     "skipLibCheck": true,
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "netlify/functions", "tests", "vite.config.mts"]
+  "include": [
+    "src",
+    "netlify/functions",
+    "tests",
+    "vite.config.mts",
+    "e2e",
+    "playwright.config.ts"
+  ]
 }

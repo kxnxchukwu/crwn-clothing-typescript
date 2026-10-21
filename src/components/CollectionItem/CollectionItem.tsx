@@ -49,7 +49,9 @@ export default function CollectionItem({
           type="button"
           onClick={handleAdd}
           aria-label={
-            justAdded ? `${name} added to cart` : `Add ${name} to cart`
+            // Starts with the visible text (WCAG 2.5.3) so voice control
+            // users can say "Add to cart"; the product name follows.
+            justAdded ? `Added to cart: ${name}` : `Add to cart: ${name}`
           }
           className="absolute right-2 bottom-2 inline-flex size-9 items-center justify-center gap-1.5 rounded-full bg-background/95 text-sm font-medium text-foreground shadow-sm backdrop-blur transition hover:bg-foreground hover:text-background md:left-2 md:h-10 md:w-auto md:translate-y-2 md:rounded-md md:opacity-0 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100 md:group-hover:translate-y-0 md:group-hover:opacity-100"
         >

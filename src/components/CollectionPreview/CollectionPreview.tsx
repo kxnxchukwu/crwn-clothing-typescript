@@ -24,10 +24,10 @@ export default function CollectionPreview({
         </h2>
         <Link
           to={`/shop/${title.toLowerCase()}`}
+          aria-label={`View all ${title}`}
           className="group flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
         >
           View all
-          <span className="sr-only"> {title}</span>
           <ArrowRight
             className="size-4 transition-transform group-hover:translate-x-0.5"
             aria-hidden="true"
