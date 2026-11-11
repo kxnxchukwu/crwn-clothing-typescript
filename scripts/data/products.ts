@@ -2,8 +2,9 @@ import type { Product } from "../../src/catalogue/product";
 
 // The catalogue as code: the source of truth for `products/{id}` in
 // Firestore. Edit here, then run `npm run seed:products` (see the script for
-// a dry run first). IDs, names, prices and images match the original
-// `collections` documents so existing carts and orders keep working.
+// a dry run first). IDs, prices and images match the original `collections`
+// documents so existing carts and orders keep working. Three names were
+// corrected to match their photos (31, 33, 35 were listed as T-shirts).
 
 const img = (path: string) => `https://i.ibb.co/${path}`;
 
@@ -238,7 +239,7 @@ export const products: Product[] = [
     price: 80,
     imageUrl: img("KV18Ysr/floral-skirt.png"),
     description:
-      "A floral piece for summer days and evenings out. Dress it up with heels or keep it easy with sneakers.",
+      "A light wrap dress with a rose print and a tie waist. Made for summer days, beach trips and evenings out.",
   },
   {
     id: 26,
@@ -274,7 +275,7 @@ export const products: Product[] = [
     price: 20,
     imageUrl: img("qBcrsJg/white-vest.png"),
     description:
-      "A clean white top that works for the office and the weekend. An easy base for jackets and statement accessories.",
+      "A sleeveless white top with lace trim at the neckline. Wear it with denim shorts in summer or under a jacket in spring.",
   },
 
   // Mens
@@ -289,12 +290,12 @@ export const products: Product[] = [
   },
   {
     id: 31,
-    name: "Floral T-shirt",
+    name: "Floral Shirt",
     category: "mens",
     price: 20,
     imageUrl: img("qMQ75QZ/floral-shirt.png"),
     description:
-      "A floral print top for holidays and summer evenings. Pairs well with chinos or shorts.",
+      "A short-sleeve button-up shirt with a bold floral print on blue. Wear it buttoned up or open over a tee for holidays and summer evenings.",
   },
   {
     id: 32,
@@ -307,12 +308,12 @@ export const products: Product[] = [
   },
   {
     id: 33,
-    name: "Pink T-shirt",
+    name: "Pink Print Shirt",
     category: "mens",
     price: 25,
     imageUrl: img("RvwnBL8/pink-shirt.png"),
     description:
-      "A simple top in pink, a fresh change from the usual neutrals. Easy to wear with denim or shorts.",
+      "A short-sleeve shirt in soft pink with a scattered print and a relaxed collar. Easy to wear with denim or shorts.",
   },
   {
     id: 34,
@@ -325,11 +326,11 @@ export const products: Product[] = [
   },
   {
     id: 35,
-    name: "Burgundy T-shirt",
+    name: "Burgundy Dot Shirt",
     category: "mens",
     price: 25,
     imageUrl: img("mh3VM1f/polka-dot-shirt.png"),
     description:
-      "A top in deep burgundy that adds colour without shouting. Pairs well with dark jeans and white sneakers.",
+      "A short-sleeve button-up shirt in deep burgundy with a fine polka dot. Smart enough for dinner and easy with jeans.",
   },
 ];
