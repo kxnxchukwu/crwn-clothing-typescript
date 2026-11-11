@@ -11,7 +11,7 @@ export const firebaseUtilsMock = {
   firestore: {},
   createUserProfileDocument: vi.fn(),
   getCurrentUser: vi.fn(async () => null),
-  getCollections: vi.fn(),
+  getProducts: vi.fn(),
 };
 
 export const firebaseAuthMock = {

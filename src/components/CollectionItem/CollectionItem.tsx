@@ -2,12 +2,13 @@ import { ReactElement, useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Check, Plus } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
-import { addItem, Item } from "../../features/cart-slice";
+import { addItem } from "../../features/cart-slice";
+import type { Product } from "../../catalogue/product";
 import { formatPrice } from "../../utils/format";
 import { toastAddedToCart } from "../../utils/cart-toast";
 
 export interface CollectionItemProps {
-  item: Item;
+  item: Product;
   title: string;
 }
 

@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { toast } from "sonner";
 import CollectionItem from "../CollectionItem";
-import { hat, renderWithProviders } from "../../../test/render";
+import { hatProduct, renderWithProviders } from "../../../test/render";
 
 vi.mock(
   "../../../firebase/firebase.utils",
@@ -15,7 +15,7 @@ describe("CollectionItem", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("links the name to the product page and shows the price", () => {
-    renderWithProviders(<CollectionItem item={hat} title="Hats" />);
+    renderWithProviders(<CollectionItem item={hatProduct} title="Hats" />);
     expect(screen.getByRole("link", { name: "Brown Brim" })).toHaveAttribute(
       "href",
       "/shop/hats/1",
@@ -25,7 +25,7 @@ describe("CollectionItem", () => {
 
   it("adds to the cart and confirms", async () => {
     const { store, user } = renderWithProviders(
-      <CollectionItem item={hat} title="Hats" />,
+      <CollectionItem item={hatProduct} title="Hats" />,
     );
 
     await user.click(

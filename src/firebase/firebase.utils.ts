@@ -12,12 +12,9 @@ import {
   getDoc,
   getDocs,
   setDoc,
-  writeBatch,
-  QuerySnapshot,
-  DocumentData,
   Timestamp,
 } from "firebase/firestore";
-import type { Item } from "../features/cart-slice";
+import { parseProduct, type Product } from "../catalogue/product";
 import { firebaseConfig } from "./config";
 
 const app = initializeApp(firebaseConfig);
@@ -27,13 +24,6 @@ export const firestore = getFirestore(app);
 
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
-
-export interface Collection {
-  id: string;
-  items: Item[];
-  routeName: string;
-  title: string;
-}
 
 export interface UserProfile {
   id: string;
@@ -72,47 +62,18 @@ export const createUserProfileDocument = async (
   };
 };
 
-export const addCollectionAndDocuments = async (
-  collectionKey: string,
-  documentsToAdd: DocumentData[],
-) => {
-  const collectionRef = collection(firestore, collectionKey);
-  const batch = writeBatch(firestore);
-
-  documentsToAdd.forEach((document) => {
-    batch.set(doc(collectionRef), document);
-  });
-
-  return await batch.commit();
+// Every valid product, in id order. Invalid documents are skipped (and
+// logged) so one bad edit can't take the whole shop down.
+export const getProducts = async (): Promise<Product[]> => {
+  const snapshot = await getDocs(collection(firestore, "products"));
+  const products: Product[] = [];
+  for (const document of snapshot.docs) {
+    const product = parseProduct(document.data());
+    if (product) products.push(product);
+    else console.warn(`Skipping invalid product ${document.id}`);
+  }
+  return products.sort((a, b) => a.id - b.id);
 };
-
-export const convertCollectionsSnapshotToMap = (
-  collections: QuerySnapshot<DocumentData>,
-) => {
-  const transformedCollection: Collection[] = collections.docs.map((doc) => {
-    const { title, items } = doc.data();
-
-    return {
-      routeName: encodeURI(title.toLowerCase()),
-      id: doc.id,
-      title,
-      items,
-    };
-  });
-
-  return transformedCollection.reduce<Record<string, Collection>>(
-    (accumulator, collection) => {
-      accumulator[collection.title.toLowerCase()] = collection;
-      return accumulator;
-    },
-    {},
-  );
-};
-
-export const getCollections = async () =>
-  convertCollectionsSnapshotToMap(
-    await getDocs(collection(firestore, "collections")),
-  );
 
 export const getCurrentUser = () =>
   new Promise<User | null>((resolve, reject) => {

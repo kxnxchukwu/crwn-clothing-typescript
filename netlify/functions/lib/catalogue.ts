@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { collection, getDocs, getFirestore } from "firebase/firestore/lite";
 import { firebaseConfig } from "../../../src/firebase/config";
+import { parseProduct } from "../../../src/catalogue/product";
 
 export interface CatalogueItem {
   name: string;
@@ -9,22 +10,18 @@ export interface CatalogueItem {
 }
 
 // Reads every product from the same public catalogue the shop shows.
-// firestore/lite is REST-only, which suits a short-lived function.
+// firestore/lite is REST-only, which suits a short-lived function. Invalid
+// documents are left out, so they can't be bought.
 export const loadCatalogue = async (): Promise<Map<number, CatalogueItem>> => {
   const app = getApps()[0] ?? initializeApp(firebaseConfig);
-  const snapshot = await getDocs(collection(getFirestore(app), "collections"));
+  const snapshot = await getDocs(collection(getFirestore(app), "products"));
 
   const catalogue = new Map<number, CatalogueItem>();
   for (const doc of snapshot.docs) {
-    const items = (doc.data().items ?? []) as Record<string, unknown>[];
-    for (const { id, name, price, imageUrl } of items) {
-      if (Number.isInteger(id) && typeof price === "number" && price > 0) {
-        catalogue.set(id as number, {
-          name: String(name ?? ""),
-          price,
-          imageUrl: String(imageUrl ?? ""),
-        });
-      }
+    const product = parseProduct(doc.data());
+    if (product) {
+      const { id, name, price, imageUrl } = product;
+      catalogue.set(id, { name, price, imageUrl });
     }
   }
   return catalogue;

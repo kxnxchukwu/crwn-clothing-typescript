@@ -23,7 +23,12 @@ export default tseslint.config(
 
   // Netlify functions, config files and Node-side tests
   {
-    files: ["netlify/**/*.ts", "tests/**/*.ts", "*.{js,mjs,mts}"],
+    files: [
+      "netlify/**/*.ts",
+      "tests/**/*.ts",
+      "scripts/**/*.{ts,mts}",
+      "*.{js,mjs,mts}",
+    ],
     languageOptions: { globals: globals.node },
   },
 

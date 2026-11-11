@@ -3,11 +3,11 @@ import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
 import CollectionItem from "../CollectionItem/CollectionItem";
 import { ProductGrid } from "../ProductGrid/ProductGrid";
-import { Item } from "../../features/cart-slice";
+import type { Product } from "../../catalogue/product";
 
 export interface CollectionPreviewProps {
   title: string;
-  items: Item[];
+  items: Product[];
 }
 
 export default function CollectionPreview({

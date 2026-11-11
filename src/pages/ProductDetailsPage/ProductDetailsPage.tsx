@@ -106,15 +106,8 @@ export default function ProductDetailsPage(): ReactElement {
             </h1>
             <p className="mt-3 text-xl">{formatPrice(item.price)}</p>
             <p className="mt-1 text-sm text-muted">VAT included</p>
-            <p className="mt-6 text-sm text-muted">
-              From the{" "}
-              <Link
-                to={`/shop/${collection.title.toLowerCase()}`}
-                className="text-foreground underline underline-offset-4"
-              >
-                {collection.title}
-              </Link>{" "}
-              collection.
+            <p className="mt-6 leading-relaxed text-pretty">
+              {item.description}
             </p>
 
             <div className="mt-8 flex items-center gap-3">
