@@ -26,6 +26,16 @@ const beanie: Item = {
 const empty = cartReducer(undefined, { type: "@@INIT" });
 
 describe("cart slice", () => {
+  it("stores only cart fields when given a full product", () => {
+    const state = cartReducer(
+      empty,
+      addItem({
+        item: { ...hat, category: "hats", description: "A hat." } as Item,
+      }),
+    );
+    expect(state.cartItems).toEqual([{ ...hat, quantity: 1 }]);
+  });
+
   it("adds new items with quantity 1 and increments existing ones", () => {
     let state = cartReducer(empty, addItem({ item: hat }));
     state = cartReducer(state, addItem({ item: beanie }));

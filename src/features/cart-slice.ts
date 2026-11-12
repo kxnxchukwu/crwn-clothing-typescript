@@ -9,6 +9,9 @@ export interface Item {
   id: number;
 }
 
+// Anything with these fields can go in the cart (a Product, or a cart line).
+export type CartProduct = Omit<Item, "quantity">;
+
 export interface CartState {
   cartItems: Item[];
   hidden: boolean;
@@ -20,27 +23,13 @@ export const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addItem: (state, action: PayloadAction<{ item: Item }>) => {
-      const existingCartItem = state.cartItems.find(
-        (cartItem) => cartItem.id === action.payload.item.id,
-      );
-
-      if (existingCartItem) {
-        const newCartItemsState = state.cartItems.map((cartItem) =>
-          cartItem.id === action.payload.item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem,
-        );
-
-        state.cartItems = newCartItemsState;
-      } else {
-        const newCartItemsState = [
-          ...state.cartItems,
-          { ...action.payload.item, quantity: 1 },
-        ];
-
-        state.cartItems = newCartItemsState;
-      }
+    // Accepts a full product but stores only what a cart line needs, so
+    // descriptions don't end up in the persisted cart.
+    addItem: (state, action: PayloadAction<{ item: CartProduct }>) => {
+      const { id, name, imageUrl, price } = action.payload.item;
+      const existing = state.cartItems.find((cartItem) => cartItem.id === id);
+      if (existing) existing.quantity += 1;
+      else state.cartItems.push({ id, name, imageUrl, price, quantity: 1 });
     },
     removeCartItem: (state, action: PayloadAction<{ item: Item }>) => {
       const existingCartItem = state.cartItems.find(

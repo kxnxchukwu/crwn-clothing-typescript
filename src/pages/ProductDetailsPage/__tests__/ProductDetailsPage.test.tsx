@@ -30,6 +30,9 @@ describe("ProductDetailsPage", () => {
       screen.getByRole("heading", { level: 1, name: "Brown Brim" }),
     ).toBeInTheDocument();
     expect(screen.getByText("€25")).toBeInTheDocument();
+    expect(
+      screen.getByText("A wide-brimmed hat in warm brown."),
+    ).toBeInTheDocument();
     const breadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
     expect(
       within(breadcrumb).getByRole("link", { name: "Hats" }),

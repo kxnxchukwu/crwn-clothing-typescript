@@ -5,7 +5,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Product catalogue: public, read-only. Prices here are what the payment
-    // function charges, so nobody may write them from a browser.
+    // function charges, so nobody may write them from a browser. The seed
+    // script writes with the Admin SDK, which bypasses these rules.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // The original catalogue, kept read-only for rollback until the
+    // products collection has been checked in production.
     match /collections/{collectionId} {
       allow read: if true;
       allow write: if false;

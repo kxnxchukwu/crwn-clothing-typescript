@@ -13,7 +13,7 @@ import { useAppDispatch } from "./redux/hooks";
 import { selectCurrentUser, checkUserSession } from "./features/user-slice";
 import Spinner from "./components/Spinner/Spinner";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
-import { fetchCollections } from "./features/shop-slice";
+import { fetchProducts } from "./features/shop-slice";
 import NotFound from "./components/NotFound/NotFound";
 import { selectTheme } from "./features/theme-slice";
 import ProductDetailsPage from "./pages/ProductDetailsPage/ProductDetailsPage";
@@ -50,7 +50,7 @@ const App = () => {
   }, [theme]);
   useEffect(() => {
     dispatch(checkUserSession());
-    dispatch(fetchCollections());
+    dispatch(fetchProducts());
   }, [dispatch]);
   return (
     <BrowserRouter>

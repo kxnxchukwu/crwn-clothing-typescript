@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { rootReducer, type RootState } from "../redux/root-reducer";
 import type { Item } from "../features/cart-slice";
+import type { Product } from "../catalogue/product";
 
 export const makeStore = (preloadedState?: Partial<RootState>) =>
   configureStore({ reducer: rootReducer, preloadedState });
@@ -42,51 +43,49 @@ export function renderWithProviders(
   return { store, user, ...result };
 }
 
-// Test data
-export const hat: Item = {
+// Test data: catalogue products, and the same products as cart lines.
+export const hatProduct: Product = {
   id: 1,
   name: "Brown Brim",
+  category: "hats",
   imageUrl: "brim.png",
   price: 25,
-  quantity: 1,
+  description: "A wide-brimmed hat in warm brown.",
 };
-export const beanie: Item = {
+export const beanieProduct: Product = {
   id: 2,
   name: "Blue Beanie",
+  category: "hats",
   imageUrl: "beanie.png",
   price: 18,
-  quantity: 1,
+  description: "A snug knit beanie in bright blue.",
 };
-export const jacket: Item = {
+export const jacketProduct: Product = {
   id: 18,
   name: "Black Jean Shearling",
+  category: "jackets",
   imageUrl: "jacket.png",
   price: 125,
-  quantity: 1,
+  description: "A black denim jacket with a warm collar.",
 };
+
+const asLine = ({ id, name, imageUrl, price }: Product): Item => ({
+  id,
+  name,
+  imageUrl,
+  price,
+  quantity: 1,
+});
+export const hat = asLine(hatProduct);
+export const beanie = asLine(beanieProduct);
+export const jacket = asLine(jacketProduct);
 
 export const shopState = (
   status: "idle" | "loading" | "succeeded" | "failed" = "succeeded",
 ): RootState["shop"] => ({
   status,
   errorMessage: undefined,
-  collections: {
-    hats: {
-      id: "c1",
-      title: "Hats",
-      routeName: "hats",
-      items: [
-        { ...hat, quantity: 0 },
-        { ...beanie, quantity: 0 },
-      ],
-    },
-    jackets: {
-      id: "c2",
-      title: "Jackets",
-      routeName: "jackets",
-      items: [{ ...jacket, quantity: 0 }],
-    },
-  },
+  products: [hatProduct, beanieProduct, jacketProduct],
 });
 
 export const signedInUser: RootState["user"] = {

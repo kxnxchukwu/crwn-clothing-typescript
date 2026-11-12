@@ -19,6 +19,7 @@
     "src",
     "netlify/functions",
     "tests",
+    "scripts",
     "vite.config.mts",
     "e2e",
     "playwright.config.ts"
