@@ -35,7 +35,9 @@ test("search, sort and category all live in the URL", async ({ page }) => {
   const sorted = await prices(page);
 
   // A shared link opens the same results, once the products have loaded.
-  await page.reload();
+  // Don't wait for every image and script: the assertions below wait for
+  // what matters.
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(searchBox(page)).toHaveValue("jacket");
   await expect.poll(() => prices(page)).toEqual(sorted);
 });
