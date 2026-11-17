@@ -6,6 +6,8 @@ const pages = [
   { name: "home", path: "/" },
   { name: "shop", path: "/shop" },
   { name: "collection", path: "/shop/hats" },
+  { name: "search results", path: "/shop?q=blue&sort=price-asc" },
+  { name: "empty search", path: "/shop/hats?q=denim" },
   { name: "product", path: "/shop/hats/1" },
   { name: "checkout", path: "/checkout" },
   { name: "sign in", path: "/signin" },

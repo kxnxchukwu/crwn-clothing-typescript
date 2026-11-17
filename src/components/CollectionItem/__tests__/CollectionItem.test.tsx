@@ -15,7 +15,7 @@ describe("CollectionItem", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("links the name to the product page and shows the price", () => {
-    renderWithProviders(<CollectionItem item={hatProduct} title="Hats" />);
+    renderWithProviders(<CollectionItem item={hatProduct} />);
     expect(screen.getByRole("link", { name: "Brown Brim" })).toHaveAttribute(
       "href",
       "/shop/hats/1",
@@ -25,7 +25,7 @@ describe("CollectionItem", () => {
 
   it("adds to the cart and confirms", async () => {
     const { store, user } = renderWithProviders(
-      <CollectionItem item={hatProduct} title="Hats" />,
+      <CollectionItem item={hatProduct} />,
     );
 
     await user.click(

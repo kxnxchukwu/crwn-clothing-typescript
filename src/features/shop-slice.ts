@@ -77,6 +77,9 @@ export const selectCollection = (routeName: string) => (state: WithShop) =>
     (collection) => collection.routeName === routeName,
   );
 
+export const selectShopFailed = (state: WithShop) =>
+  state.shop.status === "failed";
+
 // True until the first fetch settles, so pages never render with no data.
 export const selectIsCollectionFetching = (state: WithShop) =>
   state.shop.status === "idle" || state.shop.status === "loading";
