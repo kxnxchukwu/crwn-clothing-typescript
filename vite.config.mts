@@ -14,8 +14,11 @@ export default defineConfig({
       // Keep CRA's service worker filename so browsers that installed the old
       // worker pick up this one as an update instead of serving a stale cache.
       filename: "service-worker.js",
-      registerType: "autoUpdate",
-      injectRegister: "script-defer",
+      // A new deploy waits until the visitor chooses to refresh (see
+      // UpdatePrompt), so nobody is reloaded mid-checkout.
+      registerType: "prompt",
+      // Registered from the app via virtual:pwa-register/react.
+      injectRegister: false,
       // public/manifest.json is served as-is.
       manifest: false,
       workbox: {
