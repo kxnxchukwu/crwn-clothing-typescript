@@ -32,14 +32,6 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
 
-  // House style, everywhere
-  {
-    rules: {
-      // `else { if (…) }` → `else if (…)`
-      "no-lonely-if": "error",
-    },
-  },
-
   // Vitest globals (describe, it, expect, vi) in every test file
   {
     files: ["**/*.test.{ts,tsx}"],
