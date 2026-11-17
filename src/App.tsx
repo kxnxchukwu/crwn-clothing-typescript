@@ -24,13 +24,7 @@ const SignInAndSignUpPage = lazy(
 );
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage/CheckoutPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage/OrdersPage"));
-const CollectionsOverviewContainer = lazy(
-  () =>
-    import("./components/CollectionsOverviewContainer/CollectionsOverviewContainer"),
-);
-const CollectionPageContainer = lazy(
-  () => import("./components/CollectionPageContainer/CollectionPageContainer"),
-);
+const ShopPage = lazy(() => import("./pages/ShopPage/ShopPage"));
 
 // Start each new page at the top instead of keeping the previous scroll position.
 function ScrollToTop() {
@@ -76,9 +70,9 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/shop">
-                  <Route index element={<CollectionsOverviewContainer />} />
+                  <Route index element={<ShopPage />} />
                   <Route path="/shop/:id">
-                    <Route index element={<CollectionPageContainer />} />
+                    <Route index element={<ShopPage />} />
                     <Route path=":productId" element={<ProductDetailsPage />} />
                   </Route>
                 </Route>

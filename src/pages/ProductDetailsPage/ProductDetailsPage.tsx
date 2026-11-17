@@ -166,11 +166,7 @@ export default function ProductDetailsPage(): ReactElement {
           </h2>
           <ProductGrid>
             {related.map((other) => (
-              <CollectionItem
-                key={other.id}
-                item={other}
-                title={collection.title}
-              />
+              <CollectionItem key={other.id} item={other} />
             ))}
           </ProductGrid>
         </section>

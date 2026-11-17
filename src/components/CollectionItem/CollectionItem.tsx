@@ -9,19 +9,17 @@ import { toastAddedToCart } from "../../utils/cart-toast";
 
 export interface CollectionItemProps {
   item: Product;
-  title: string;
 }
 
 // Product card: the image and name link to the product page; "Add to cart"
 // sits over the image (on hover/focus on desktop, always on touch screens).
 export default function CollectionItem({
   item,
-  title,
 }: CollectionItemProps): ReactElement {
-  const { name, price, imageUrl, id } = item;
+  const { name, price, imageUrl, id, category } = item;
   const dispatch = useAppDispatch();
   const [justAdded, setJustAdded] = useState(false);
-  const productUrl = `/shop/${title.toLowerCase()}/${id}`;
+  const productUrl = `/shop/${category}/${id}`;
 
   useEffect(() => {
     if (!justAdded) return;
