@@ -15,6 +15,7 @@ import Spinner from "./components/Spinner/Spinner";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { fetchProducts } from "./features/shop-slice";
 import NotFound from "./components/NotFound/NotFound";
+import UpdatePrompt from "./components/UpdatePrompt/UpdatePrompt";
 import { selectTheme } from "./features/theme-slice";
 import ProductDetailsPage from "./pages/ProductDetailsPage/ProductDetailsPage";
 
@@ -64,6 +65,7 @@ const App = () => {
               },
             }}
           />
+          <UpdatePrompt />
           <Header />
           <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <Suspense fallback={<Spinner />}>

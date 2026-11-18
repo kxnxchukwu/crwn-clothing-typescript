@@ -22,14 +22,24 @@ test("search, sort and category all live in the URL", async ({ page }) => {
     .getByRole("combobox", { name: "Sort by" })
     .selectOption("price-desc");
   await expect(page).toHaveURL(/q=jacket&sort=price-desc/);
+  // Poll: the grid re-renders just after the URL changes.
+  await expect
+    .poll(async () => {
+      const shown = await prices(page);
+      return (
+        shown.length > 1 &&
+        shown.join() === [...shown].sort((a, b) => b - a).join()
+      );
+    })
+    .toBe(true);
   const sorted = await prices(page);
-  expect(sorted).toEqual([...sorted].sort((a, b) => b - a));
 
-  // A shared link opens the same results.
-  await page.reload();
-  await waitForContent(page);
+  // A shared link opens the same results, once the products have loaded.
+  // Don't wait for every image and script: the assertions below wait for
+  // what matters.
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(searchBox(page)).toHaveValue("jacket");
-  expect(await prices(page)).toEqual(sorted);
+  await expect.poll(() => prices(page)).toEqual(sorted);
 });
 
 test("Back restores the previous search", async ({ page }) => {
