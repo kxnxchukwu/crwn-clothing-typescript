@@ -120,11 +120,23 @@ describe("PaymentForm", () => {
     });
   });
 
+  it("starts guests in Ireland", () => {
+    renderForm();
+    expect(stripe.paymentElementOptions).toEqual({
+      layout: "tabs",
+      defaultValues: { billingDetails: { address: { country: "IE" } } },
+    });
+  });
+
   it("prefills a signed-in shopper's name and email", () => {
     renderForm({ signedIn: true });
     expect(stripe.paymentElementOptions).toMatchObject({
       defaultValues: {
-        billingDetails: { name: "Ada Lovelace", email: "ada@example.test" },
+        billingDetails: {
+          name: "Ada Lovelace",
+          email: "ada@example.test",
+          address: { country: "IE" },
+        },
       },
     });
   });

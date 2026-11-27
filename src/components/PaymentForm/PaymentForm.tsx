@@ -24,6 +24,9 @@ import { formatPrice } from "../../utils/format";
 // (a bank app, iDEAL, a 3-D Secure page on another site).
 export const RETURN_PATH = "/checkout/complete";
 
+// Shoppers can still pick another country in the form.
+const DEFAULT_COUNTRY = "IE";
+
 // The payment fields render in Stripe's iframe, so they can't read our CSS
 // variables; mirror the light/dark token values here.
 const tokens = {
@@ -222,14 +225,17 @@ function CheckoutForm({ onComplete }: PaymentFormProps): ReactElement {
         <PaymentElement
           options={{
             layout: "tabs",
-            defaultValues: currentUser
-              ? {
-                  billingDetails: {
-                    name: currentUser.displayName,
-                    email: currentUser.email,
-                  },
-                }
-              : undefined,
+            defaultValues: {
+              billingDetails: {
+                // An Irish shop: start from Ireland rather than Stripe's IP
+                // guess, which a VPN can turn into "United States" + ZIP.
+                address: { country: DEFAULT_COUNTRY },
+                ...(currentUser && {
+                  name: currentUser.displayName,
+                  email: currentUser.email,
+                }),
+              },
+            },
           }}
           onReady={() => setIsReady(true)}
           onChange={() => setError(null)}
