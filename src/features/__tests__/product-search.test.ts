@@ -1,4 +1,9 @@
-import { filterProducts, matchesQuery, parseSort } from "../product-search";
+import {
+  filterProducts,
+  matchesQuery,
+  parseSort,
+  sizeOptions,
+} from "../product-search";
 import type { Product } from "../../catalogue/product";
 
 const product = (overrides: Partial<Product>): Product => ({
@@ -8,6 +13,8 @@ const product = (overrides: Partial<Product>): Product => ({
   price: 25,
   imageUrl: "x.png",
   description: "A wide-brimmed hat.",
+  sizes: ["One size"],
+  stock: { "One size": 3 },
   ...overrides,
 });
 
@@ -24,6 +31,8 @@ const jacket = product({
   category: "jackets",
   price: 90,
   description: "Classic denim.",
+  sizes: ["S", "M", "L"],
+  stock: { S: 1, M: 0, L: 4 },
 });
 const all = [jacket, brim, beanie];
 
@@ -80,5 +89,25 @@ describe("parseSort", () => {
     expect(parseSort("price-desc")).toBe("price-desc");
     expect(parseSort("cheapest")).toBe("featured");
     expect(parseSort(null)).toBe("featured");
+  });
+});
+
+describe("sizes", () => {
+  it("offers the sizes these products come in, smallest first", () => {
+    const shoes = product({ id: 10, sizes: ["EU 42", "EU 40"], stock: {} });
+    expect(sizeOptions([shoes, jacket, brim])).toEqual([
+      "S",
+      "M",
+      "L",
+      "EU 40",
+      "EU 42",
+    ]);
+    expect(sizeOptions([brim])).toEqual([]);
+  });
+
+  it("keeps products with that size in stock", () => {
+    expect(ids(filterProducts(all, { size: "L" }))).toEqual([18]);
+    expect(ids(filterProducts(all, { size: "M" }))).toEqual([]);
+    expect(ids(filterProducts(all, { size: "XL" }))).toEqual([]);
   });
 });

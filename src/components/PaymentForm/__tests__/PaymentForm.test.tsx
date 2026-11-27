@@ -158,7 +158,7 @@ describe("PaymentForm", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("sends only item ids and quantities, never prices", async () => {
+  it("sends only item ids, sizes and quantities, never prices", async () => {
     respond(400, { error: "Your cart is empty." });
     const { user } = renderForm();
 
@@ -168,8 +168,8 @@ describe("PaymentForm", () => {
     expect(url).toBe("/.netlify/functions/create-payment-intent");
     expect(JSON.parse(init.body)).toEqual({
       items: [
-        { id: 1, quantity: 2 },
-        { id: 18, quantity: 1 },
+        { id: 1, size: "One size", quantity: 2 },
+        { id: 18, size: "L", quantity: 1 },
       ],
     });
     expect(init.headers.Authorization).toBeUndefined();

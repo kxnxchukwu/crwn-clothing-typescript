@@ -1,7 +1,12 @@
 import type { Handler } from "@netlify/functions";
 import Stripe from "stripe";
 import { FieldValue } from "firebase-admin/firestore";
-import { computeTotalCents, parseOrderLines, toOrderItems } from "./lib/order";
+import {
+  checkStock,
+  computeTotalCents,
+  parseOrderLines,
+  toOrderItems,
+} from "./lib/order";
 import { loadCatalogue } from "./lib/catalogue";
 import { getAdmin } from "./lib/admin";
 
@@ -57,6 +62,9 @@ const handler: Handler = async (event) => {
     );
     const total = computeTotalCents(lines.value, prices);
     if (!total.ok) return json(400, { error: total.error });
+    // 409: the cart was fine when filled, but stock has run out since.
+    const inStock = checkStock(lines.value, catalogue);
+    if (!inStock.ok) return json(409, { error: inStock.error });
 
     const stripe = new Stripe(secretKey, { apiVersion: "2022-11-15" });
     const paymentIntent = await stripe.paymentIntents.create({
@@ -66,9 +74,12 @@ const handler: Handler = async (event) => {
       // local methods), matching the Payment Element in the browser.
       automatic_payment_methods: { enabled: true },
       metadata: {
+        // For reading in the Stripe dashboard; the order document is the
+        // record. Stripe caps metadata values at 500 characters.
         items: lines.value
-          .map(({ id, quantity }) => `${id}x${quantity}`)
-          .join(","),
+          .map(({ id, size, quantity }) => `${id}/${size}x${quantity}`)
+          .join(",")
+          .slice(0, 500),
         userId: user?.uid ?? "",
       },
     });

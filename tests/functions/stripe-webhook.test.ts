@@ -3,7 +3,8 @@ import type { HandlerEvent, HandlerContext } from "@netlify/functions";
 
 const constructEvent = vi.fn();
 const update = vi.fn();
-let storedOrder: { status: string } | null = null;
+let storedOrder: { status: string; items?: unknown[] } | null = null;
+let storedStock: Record<string, Record<string, number>> = {};
 let adminConfigured = true;
 
 vi.mock("stripe", () => ({
@@ -21,15 +22,23 @@ vi.mock("../../netlify/functions/lib/admin", () => ({
     adminConfigured
       ? {
           db: {
-            collection: () => ({ doc: (id: string) => ({ id }) }),
+            collection: (name: string) => ({
+              doc: (id: string) => ({ path: `${name}/${id}`, id }),
+            }),
             runTransaction: async (
               fn: (transaction: unknown) => Promise<void>,
             ) =>
               fn({
                 get: async () => ({
                   exists: storedOrder !== null,
-                  get: (field: "status") => storedOrder?.[field],
+                  get: (field: "status" | "items") => storedOrder?.[field],
                 }),
+                getAll: async (...refs: { id: string }[]) =>
+                  refs.map(({ id }) => ({
+                    id,
+                    exists: id in storedStock,
+                    get: () => storedStock[id],
+                  })),
                 update,
               }),
           },
@@ -64,6 +73,7 @@ describe("stripe-webhook", () => {
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_dummy";
     adminConfigured = true;
     storedOrder = { status: "pending" };
+    storedStock = {};
     vi.clearAllMocks();
   });
 
@@ -89,8 +99,58 @@ describe("stripe-webhook", () => {
     constructEvent.mockReturnValue(stripeEvent("payment_intent.succeeded"));
     expect(await call()).toBe(200);
     expect(update).toHaveBeenCalledWith(
-      { id: "pi_123" },
+      { path: "orders/pi_123", id: "pi_123" },
       { status: "paid", amountReceived: 5000, paidAt: "SERVER_TIME" },
+    );
+  });
+
+  it("takes paid items out of stock with the order", async () => {
+    storedOrder = {
+      status: "pending",
+      items: [
+        { id: 18, size: "M", quantity: 2 },
+        { id: 18, size: "L", quantity: 1 },
+        { id: 1, size: "One size", quantity: 1 },
+      ],
+    };
+    storedStock = { "18": { S: 1, M: 3, L: 1 }, "1": { "One size": 4 } };
+    constructEvent.mockReturnValue(stripeEvent("payment_intent.succeeded"));
+
+    expect(await call()).toBe(200);
+    expect(update).toHaveBeenCalledWith(
+      { path: "products/18", id: "18" },
+      { stock: { S: 1, M: 1, L: 0 } },
+    );
+    expect(update).toHaveBeenCalledWith(
+      { path: "products/1", id: "1" },
+      { stock: { "One size": 3 } },
+    );
+    expect(update).toHaveBeenCalledWith(
+      { path: "orders/pi_123", id: "pi_123" },
+      { status: "paid", amountReceived: 5000, paidAt: "SERVER_TIME" },
+    );
+  });
+
+  it("flags an order that paid for more than was left", async () => {
+    storedOrder = {
+      status: "pending",
+      items: [{ id: 18, size: "L", quantity: 2 }],
+    };
+    storedStock = { "18": { L: 1 } };
+    constructEvent.mockReturnValue(stripeEvent("payment_intent.succeeded"));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    expect(await call()).toBe(200);
+    expect(update).toHaveBeenCalledWith(
+      { path: "products/18", id: "18" },
+      { stock: { L: 0 } },
+    );
+    expect(update).toHaveBeenCalledWith(
+      { path: "orders/pi_123", id: "pi_123" },
+      expect.objectContaining({
+        status: "paid",
+        stockShortfall: [{ id: 18, size: "L", missing: 1 }],
+      }),
     );
   });
 
@@ -99,14 +159,20 @@ describe("stripe-webhook", () => {
       stripeEvent("payment_intent.payment_failed"),
     );
     expect(await call()).toBe(200);
-    expect(update).toHaveBeenCalledWith({ id: "pi_123" }, { status: "failed" });
+    expect(update).toHaveBeenCalledWith(
+      { path: "orders/pi_123", id: "pi_123" },
+      { status: "failed" },
+    );
+    expect(update).toHaveBeenCalledTimes(1);
   });
 
-  it("is safe when Stripe repeats an event for a paid order", async () => {
-    storedOrder = { status: "paid" };
-    constructEvent.mockReturnValue(
-      stripeEvent("payment_intent.payment_failed"),
-    );
+  it("never takes stock twice when Stripe repeats an event", async () => {
+    storedOrder = {
+      status: "paid",
+      items: [{ id: 18, size: "M", quantity: 1 }],
+    };
+    storedStock = { "18": { M: 3 } };
+    constructEvent.mockReturnValue(stripeEvent("payment_intent.succeeded"));
     expect(await call()).toBe(200);
     expect(update).not.toHaveBeenCalled();
   });

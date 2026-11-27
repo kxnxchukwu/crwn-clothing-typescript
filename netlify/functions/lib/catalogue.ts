@@ -7,6 +7,8 @@ export interface CatalogueItem {
   name: string;
   price: number;
   imageUrl: string;
+  sizes: string[];
+  stock: Record<string, number>;
 }
 
 // Reads every product from the same public catalogue the shop shows.
@@ -20,8 +22,8 @@ export const loadCatalogue = async (): Promise<Map<number, CatalogueItem>> => {
   for (const doc of snapshot.docs) {
     const product = parseProduct(doc.data());
     if (product) {
-      const { id, name, price, imageUrl } = product;
-      catalogue.set(id, { name, price, imageUrl });
+      const { id, name, price, imageUrl, sizes, stock } = product;
+      catalogue.set(id, { name, price, imageUrl, sizes, stock });
     }
   }
   return catalogue;

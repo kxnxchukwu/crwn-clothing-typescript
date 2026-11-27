@@ -51,6 +51,8 @@ export const hatProduct: Product = {
   imageUrl: "brim.png",
   price: 25,
   description: "A wide-brimmed hat in warm brown.",
+  sizes: ["One size"],
+  stock: { "One size": 8 },
 };
 export const beanieProduct: Product = {
   id: 2,
@@ -59,6 +61,8 @@ export const beanieProduct: Product = {
   imageUrl: "beanie.png",
   price: 18,
   description: "A snug knit beanie in bright blue.",
+  sizes: ["One size"],
+  stock: { "One size": 0 },
 };
 export const jacketProduct: Product = {
   id: 18,
@@ -67,18 +71,17 @@ export const jacketProduct: Product = {
   imageUrl: "jacket.png",
   price: 125,
   description: "A black denim jacket with a warm collar.",
+  sizes: ["S", "M", "L"],
+  stock: { S: 2, M: 0, L: 6 },
 };
 
-const asLine = ({ id, name, imageUrl, price }: Product): Item => ({
-  id,
-  name,
-  imageUrl,
-  price,
-  quantity: 1,
-});
-export const hat = asLine(hatProduct);
-export const beanie = asLine(beanieProduct);
-export const jacket = asLine(jacketProduct);
+const asLine = (
+  { id, name, imageUrl, price }: Product,
+  size: string,
+): Item => ({ id, name, imageUrl, price, size, quantity: 1 });
+export const hat = asLine(hatProduct, "One size");
+export const beanie = asLine(beanieProduct, "One size");
+export const jacket = asLine(jacketProduct, "L");
 
 export const shopState = (
   status: "idle" | "loading" | "succeeded" | "failed" = "succeeded",

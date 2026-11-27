@@ -1,9 +1,15 @@
 import { ReactElement, useEffect, useState } from "react";
 import { Link } from "react-router";
-import { Check, Plus } from "lucide-react";
+import { useSelector } from "react-redux";
+import { ArrowRight, Check, Plus } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
-import { addItem } from "../../features/cart-slice";
-import type { Product } from "../../catalogue/product";
+import { addItem, selectQuantityInCart } from "../../features/cart-slice";
+import {
+  isOneSize,
+  isSoldOut,
+  stockOf,
+  type Product,
+} from "../../catalogue/product";
 import { formatPrice } from "../../utils/format";
 import { toastAddedToCart } from "../../utils/cart-toast";
 
@@ -11,8 +17,10 @@ export interface CollectionItemProps {
   item: Product;
 }
 
-// Product card: the image and name link to the product page; "Add to cart"
-// sits over the image (on hover/focus on desktop, always on touch screens).
+// Product card: the image and name link to the product page. One-size
+// products get "Add to cart" over the image (on hover/focus on desktop,
+// always on touch screens); sized ones get "Choose size", which opens the
+// product page.
 export default function CollectionItem({
   item,
 }: CollectionItemProps): ReactElement {
@@ -20,6 +28,10 @@ export default function CollectionItem({
   const dispatch = useAppDispatch();
   const [justAdded, setJustAdded] = useState(false);
   const productUrl = `/shop/${category}/${id}`;
+  const oneSize = isOneSize(item);
+  const soldOut = isSoldOut(item);
+  const inCart = useSelector(selectQuantityInCart(id, item.sizes[0]));
+  const canQuickAdd = oneSize && stockOf(item, item.sizes[0]) > inCart;
 
   useEffect(() => {
     if (!justAdded) return;
@@ -28,7 +40,7 @@ export default function CollectionItem({
   }, [justAdded]);
 
   const handleAdd = () => {
-    dispatch(addItem({ item }));
+    dispatch(addItem({ item, size: item.sizes[0] }));
     setJustAdded(true);
     toastAddedToCart(dispatch, name);
   };
@@ -44,25 +56,46 @@ export default function CollectionItem({
             className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         </Link>
-        <button
-          type="button"
-          onClick={handleAdd}
-          aria-label={
-            // Starts with the visible text (WCAG 2.5.3) so voice control
-            // users can say "Add to cart"; the product name follows.
-            justAdded ? `Added to cart: ${name}` : `Add to cart: ${name}`
-          }
-          className="absolute right-2 bottom-2 inline-flex size-9 items-center justify-center gap-1.5 rounded-full bg-background/95 text-sm font-medium text-foreground shadow-sm backdrop-blur transition hover:bg-foreground hover:text-background md:left-2 md:h-10 md:w-auto md:translate-y-2 md:rounded-md md:opacity-0 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100 md:group-hover:translate-y-0 md:group-hover:opacity-100"
-        >
-          {justAdded ? (
-            <Check className="size-4" aria-hidden="true" />
-          ) : (
-            <Plus className="size-4" aria-hidden="true" />
-          )}
-          <span className="hidden md:inline" aria-hidden="true">
-            {justAdded ? "Added" : "Add to cart"}
+        {soldOut && (
+          <span className="absolute top-2 left-2 rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur">
+            Sold out
           </span>
-        </button>
+        )}
+        {canQuickAdd ? (
+          <button
+            type="button"
+            onClick={handleAdd}
+            aria-label={
+              // Starts with the visible text (WCAG 2.5.3) so voice control
+              // users can say "Add to cart"; the product name follows.
+              justAdded ? `Added to cart: ${name}` : `Add to cart: ${name}`
+            }
+            className={overlayAction}
+          >
+            {justAdded ? (
+              <Check className="size-4" aria-hidden="true" />
+            ) : (
+              <Plus className="size-4" aria-hidden="true" />
+            )}
+            <span className="hidden md:inline" aria-hidden="true">
+              {justAdded ? "Added" : "Add to cart"}
+            </span>
+          </button>
+        ) : (
+          !oneSize &&
+          !soldOut && (
+            <Link
+              to={productUrl}
+              aria-label={`Choose size: ${name}`}
+              className={overlayAction}
+            >
+              <ArrowRight className="size-4" aria-hidden="true" />
+              <span className="hidden md:inline" aria-hidden="true">
+                Choose size
+              </span>
+            </Link>
+          )
+        )}
       </div>
       <div className="mt-3 flex items-start justify-between gap-3 text-sm">
         <Link
@@ -76,3 +109,6 @@ export default function CollectionItem({
     </div>
   );
 }
+
+const overlayAction =
+  "absolute right-2 bottom-2 inline-flex size-9 items-center justify-center gap-1.5 rounded-full bg-background/95 text-sm font-medium text-foreground shadow-sm backdrop-blur transition hover:bg-foreground hover:text-background md:left-2 md:h-10 md:w-auto md:translate-y-2 md:rounded-md md:opacity-0 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100 md:group-hover:translate-y-0 md:group-hover:opacity-100";

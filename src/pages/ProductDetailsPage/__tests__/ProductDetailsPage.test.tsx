@@ -1,7 +1,13 @@
 import { screen, within } from "@testing-library/react";
 import { toast } from "sonner";
 import ProductDetailsPage from "../ProductDetailsPage";
-import { renderWithProviders, shopState } from "../../../test/render";
+import {
+  hat,
+  jacket,
+  renderWithProviders,
+  shopState,
+} from "../../../test/render";
+import type { Item } from "../../../features/cart-slice";
 
 vi.mock(
   "../../../firebase/firebase.utils",
@@ -11,12 +17,18 @@ vi.mock("sonner", () => ({
   toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
 }));
 
-const openProduct = (route: string, status = "succeeded" as const) =>
+const openProduct = (
+  route: string,
+  status = "succeeded" as const,
+  cart?: { cartItems: Item[]; hidden: boolean },
+) =>
   renderWithProviders(<ProductDetailsPage />, {
     route,
     path: "/shop/:id/:productId",
-    state: { shop: shopState(status) },
+    state: { shop: shopState(status), ...(cart && { cart }) },
   });
+
+const stockStatus = () => screen.getByTestId("stock-status");
 
 const quantity = () =>
   within(screen.getByRole("group", { name: "Quantity" })).getByText(/^\d+$/);
@@ -50,7 +62,7 @@ describe("ProductDetailsPage", () => {
     await user.click(screen.getByRole("button", { name: "Add to cart" }));
 
     expect(store.getState().cart.cartItems).toEqual([
-      expect.objectContaining({ id: 1, quantity: 3 }),
+      expect.objectContaining({ id: 1, size: "One size", quantity: 3 }),
     ]);
     expect(toast.success).toHaveBeenCalledWith(
       "3 × Brown Brim added to cart",
@@ -60,15 +72,62 @@ describe("ProductDetailsPage", () => {
     );
   });
 
-  it("keeps quantity between 1 and 10", async () => {
-    const { user } = openProduct("/shop/hats/1");
+  it("keeps quantity between 1 and what's in stock", async () => {
+    // 8 in stock, 2 already in the cart: 6 more can be added.
+    const { user } = openProduct("/shop/hats/1", "succeeded", {
+      cartItems: [{ ...hat, quantity: 2 }],
+      hidden: true,
+    });
     const decrease = screen.getByRole("button", { name: "Decrease quantity" });
     const increase = screen.getByRole("button", { name: "Increase quantity" });
     expect(decrease).toBeDisabled();
 
     for (let i = 0; i < 12; i++) await user.click(increase);
-    expect(quantity()).toHaveTextContent("10");
+    expect(quantity()).toHaveTextContent("6");
     expect(increase).toBeDisabled();
+  });
+
+  it("asks for a size, then adds that size", async () => {
+    const { store, user } = openProduct("/shop/jackets/18");
+    const size = screen.getByRole("group", { name: "Size" });
+    expect(stockStatus()).toHaveTextContent("Select a size.");
+    expect(
+      screen.getByRole("button", { name: "Select a size" }),
+    ).toBeDisabled();
+
+    // M is sold out: still listed, but can't be picked.
+    expect(within(size).getByRole("radio", { name: "M" })).toBeDisabled();
+    expect(
+      within(size).getByRole("radio", { name: "M" }),
+    ).toHaveAccessibleDescription("Sold out");
+
+    await user.click(within(size).getByRole("radio", { name: "S" }));
+    expect(stockStatus()).toHaveTextContent("Only 2 left in S.");
+    await user.click(screen.getByRole("button", { name: "Add to cart" }));
+
+    expect(store.getState().cart.cartItems).toEqual([
+      expect.objectContaining({ id: 18, size: "S", quantity: 1 }),
+    ]);
+    expect(toast.success).toHaveBeenCalledWith(
+      "Black Jean Shearling (S) added to cart",
+      expect.anything(),
+    );
+  });
+
+  it("stops adding once the cart holds every one in stock", async () => {
+    const { user } = openProduct("/shop/jackets/18", "succeeded", {
+      cartItems: [{ ...jacket, size: "S", quantity: 2 }],
+      hidden: true,
+    });
+    await user.click(screen.getByRole("radio", { name: "S" }));
+    expect(stockStatus()).toHaveTextContent("All 2 in S are in your cart.");
+    expect(screen.getByRole("button", { name: "Add to cart" })).toBeDisabled();
+  });
+
+  it("says when a product is sold out in every size", () => {
+    openProduct("/shop/hats/2");
+    expect(stockStatus()).toHaveTextContent("Sold out in every size.");
+    expect(screen.getByRole("button", { name: "Sold out" })).toBeDisabled();
   });
 
   it("lists other products from the collection", () => {

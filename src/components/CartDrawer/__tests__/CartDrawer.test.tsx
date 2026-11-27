@@ -37,7 +37,9 @@ describe("CartDrawer", () => {
 
     // At quantity 1 the minus button removes the line.
     await user.click(
-      screen.getByRole("button", { name: "Remove Black Jean Shearling" }),
+      screen.getByRole("button", {
+        name: "Remove Black Jean Shearling, size L",
+      }),
     );
     expect(screen.queryByText("Black Jean Shearling")).not.toBeInTheDocument();
 

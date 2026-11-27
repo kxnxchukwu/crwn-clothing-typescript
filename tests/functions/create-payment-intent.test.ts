@@ -31,8 +31,26 @@ vi.mock("../../netlify/functions/lib/catalogue", () => ({
   loadCatalogue: vi.fn(
     async () =>
       new Map([
-        [1, { name: "Brown Brim", price: 25, imageUrl: "brim.png" }],
-        [18, { name: "Black Jean Shearling", price: 125, imageUrl: "j.png" }],
+        [
+          1,
+          {
+            name: "Brown Brim",
+            price: 25,
+            imageUrl: "brim.png",
+            sizes: ["One size"],
+            stock: { "One size": 5 },
+          },
+        ],
+        [
+          18,
+          {
+            name: "Black Jean Shearling",
+            price: 125,
+            imageUrl: "j.png",
+            sizes: ["S", "M"],
+            stock: { S: 0, M: 4 },
+          },
+        ],
       ]),
   ),
 }));
@@ -72,8 +90,8 @@ describe("create-payment-intent", () => {
     const response = await call({
       amount: 1,
       items: [
-        { id: 1, quantity: 2, price: 0.01 },
-        { id: 18, quantity: 1 },
+        { id: 1, size: "One size", quantity: 2, price: 0.01 },
+        { id: 18, size: "M", quantity: 1 },
       ],
     });
 
@@ -87,13 +105,26 @@ describe("create-payment-intent", () => {
         amount: 17500,
         currency: "eur",
         automatic_payment_methods: { enabled: true },
-        metadata: { items: "1x2,18x1", userId: "" },
+        metadata: { items: "1/One sizex2,18/Mx1", userId: "" },
       }),
     );
   });
 
+  it("refuses sizes that have sold out since the cart was filled", async () => {
+    const response = await call({
+      items: [{ id: 18, size: "S", quantity: 1 }],
+    });
+    expect(response).toEqual({
+      statusCode: 409,
+      body: { error: "Black Jean Shearling in S is sold out." },
+    });
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it("rejects unknown products without creating a payment", async () => {
-    const response = await call({ items: [{ id: 999, quantity: 1 }] });
+    const response = await call({
+      items: [{ id: 999, size: "M", quantity: 1 }],
+    });
     expect(response.statusCode).toBe(400);
     expect(create).not.toHaveBeenCalled();
   });
@@ -108,14 +139,18 @@ describe("create-payment-intent", () => {
 
   it("hides Stripe errors from the client", async () => {
     create.mockRejectedValue(new Error("secret internal detail"));
-    const response = await call({ items: [{ id: 1, quantity: 1 }] });
+    const response = await call({
+      items: [{ id: 1, size: "One size", quantity: 1 }],
+    });
     expect(response.statusCode).toBe(502);
     expect(JSON.stringify(response.body)).not.toContain("secret internal");
   });
 
   it("fails clearly when the secret key is missing", async () => {
     delete process.env.STRIPE_SECRET_KEY;
-    const response = await call({ items: [{ id: 1, quantity: 1 }] });
+    const response = await call({
+      items: [{ id: 1, size: "One size", quantity: 1 }],
+    });
     expect(response.statusCode).toBe(500);
     expect(create).not.toHaveBeenCalled();
   });
@@ -127,7 +162,7 @@ describe("create-payment-intent", () => {
 
     it("saves a pending order for the verified user", async () => {
       const response = await call(
-        { items: [{ id: 1, quantity: 2 }] },
+        { items: [{ id: 1, size: "One size", quantity: 2 }] },
         { token: "good-token" },
       );
 
@@ -135,7 +170,7 @@ describe("create-payment-intent", () => {
       expect(verifyIdToken).toHaveBeenCalledWith("good-token");
       expect(create).toHaveBeenCalledWith(
         expect.objectContaining({
-          metadata: { items: "1x2", userId: "user-1" },
+          metadata: { items: "1/One sizex2", userId: "user-1" },
         }),
       );
       expect(doc).toHaveBeenCalledWith("pi_123");
@@ -146,6 +181,7 @@ describe("create-payment-intent", () => {
         items: [
           {
             id: 1,
+            size: "One size",
             name: "Brown Brim",
             imageUrl: "brim.png",
             price: 25,
@@ -160,7 +196,7 @@ describe("create-payment-intent", () => {
     });
 
     it("saves guest orders without a user", async () => {
-      await call({ items: [{ id: 1, quantity: 1 }] });
+      await call({ items: [{ id: 1, size: "One size", quantity: 1 }] });
       expect(verifyIdToken).not.toHaveBeenCalled();
       expect(setOrder).toHaveBeenCalledWith(
         expect.objectContaining({ userId: null, email: null }),
@@ -170,7 +206,7 @@ describe("create-payment-intent", () => {
     it("rejects an invalid token instead of saving a guest order", async () => {
       verifyIdToken.mockRejectedValue(new Error("expired"));
       const response = await call(
-        { items: [{ id: 1, quantity: 1 }] },
+        { items: [{ id: 1, size: "One size", quantity: 1 }] },
         { token: "expired-token" },
       );
       expect(response.statusCode).toBe(401);
@@ -180,14 +216,16 @@ describe("create-payment-intent", () => {
 
     it("fails the request if the order can't be saved", async () => {
       setOrder.mockRejectedValue(new Error("firestore down"));
-      const response = await call({ items: [{ id: 1, quantity: 1 }] });
+      const response = await call({
+        items: [{ id: 1, size: "One size", quantity: 1 }],
+      });
       expect(response.statusCode).toBe(502);
     });
   });
 
   it("skips order saving when Firebase Admin isn't configured", async () => {
     const response = await call(
-      { items: [{ id: 1, quantity: 1 }] },
+      { items: [{ id: 1, size: "One size", quantity: 1 }] },
       { token: "ignored" },
     );
     expect(response.statusCode).toBe(200);

@@ -12,6 +12,8 @@ export interface Order {
   id: string;
   items: {
     id: number;
+    // Missing on orders from before sizes.
+    size?: string;
     name: string;
     imageUrl: string;
     price: number;

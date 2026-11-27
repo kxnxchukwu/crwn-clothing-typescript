@@ -33,7 +33,9 @@ const openShop = (
 const url = () => screen.getByRole("status", { name: "URL" });
 const names = () =>
   screen
-    .queryAllByRole("link", { name: /Brown Brim|Blue Beanie|Black Jean/ })
+    .queryAllByRole("link", {
+      name: /^(Brown Brim|Blue Beanie|Black Jean Shearling)$/,
+    })
     .map((link) => link.textContent);
 const search = () => screen.getByRole("searchbox", { name: "Search products" });
 
@@ -113,6 +115,36 @@ describe("ShopPage", () => {
       "featured",
     );
     expect(url()).toHaveTextContent(/^\/shop\?q=b$/);
+  });
+
+  it("filters by a size that's in stock and keeps it in the URL", async () => {
+    const { user } = openShop("/shop");
+    const sizeMenu = screen.getByRole("combobox", { name: "Size" });
+    // Only sizes the products come in; "One size" isn't a filter.
+    expect(
+      within(sizeMenu)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Any", "S", "M", "L"]);
+
+    await user.selectOptions(sizeMenu, "L");
+    expect(names()).toEqual(["Black Jean Shearling"]);
+    expect(screen.getByText("1 product in size L")).toBeInTheDocument();
+    expect(url()).toHaveTextContent("/shop?size=L");
+
+    // The jacket's M is sold out, so nothing matches.
+    await user.selectOptions(sizeMenu, "M");
+    expect(
+      screen.getByRole("heading", { name: "Nothing in size M here" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(url()).toHaveTextContent(/^\/shop$/);
+    expect(names()).toHaveLength(3);
+  });
+
+  it("hides the size menu where nothing comes in sizes", () => {
+    openShop("/shop/hats");
+    expect(screen.queryByRole("combobox", { name: "Size" })).toBeNull();
   });
 
   it("keeps the search and sort when switching category", async () => {

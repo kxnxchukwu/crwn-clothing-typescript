@@ -8,6 +8,8 @@ const hat: Product = {
   price: 25,
   imageUrl: "brim.png",
   description: "A hat.",
+  sizes: ["One size"],
+  stock: { "One size": 5 },
 };
 const beanie: Product = { ...hat, id: 2, name: "Blue Beanie", price: 18 };
 
@@ -37,9 +39,46 @@ describe("planProductSync", () => {
       firestore({ ...hat, price: 20, description: "Old" }, beanie),
     );
     expect(plan.update).toEqual([
-      { product: hat, changed: ["price", "description"] },
+      // Existing counts are left out of the write, so they stay as they are.
+      { product: { ...hat, stock: {} }, changed: ["price", "description"] },
     ]);
     expect(plan.unchanged).toEqual([2]);
+  });
+
+  it("never resets stock that sales have changed", () => {
+    const plan = planProductSync(
+      [hat],
+      firestore({ ...hat, stock: { "One size": 1 } }),
+    );
+    expect(plan.unchanged).toEqual([1]);
+  });
+
+  it("adds starting stock only for sizes Firestore doesn't count yet", () => {
+    const jacket: Product = {
+      ...hat,
+      id: 18,
+      category: "jackets",
+      sizes: ["S", "M", "L"],
+      stock: { S: 4, M: 4, L: 4 },
+    };
+    // A product from before sizes existed, then one with a new size added.
+    const plan = planProductSync(
+      [jacket, { ...beanie, sizes: ["One size"] }],
+      firestore(
+        { ...jacket, sizes: ["S", "M"], stock: { S: 0, M: 2 } },
+        { ...beanie, sizes: undefined, stock: undefined },
+      ),
+    );
+    expect(plan.update).toEqual([
+      {
+        product: { ...jacket, stock: { L: 4 } },
+        changed: ["sizes", "stock for L"],
+      },
+      {
+        product: { ...beanie, stock: { "One size": 5 } },
+        changed: ["sizes", "stock for One size"],
+      },
+    ]);
   });
 
   it("reports products missing from the seed without deleting them", () => {

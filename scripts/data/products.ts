@@ -1,4 +1,5 @@
-import type { Product } from "../../src/catalogue/product";
+import { SIZES_BY_CATEGORY, type Product } from "../../src/catalogue/product";
+import { initialStock } from "./stock";
 
 // The catalogue as code: the source of truth for `products/{id}` in
 // Firestore. Edit here, then run `npm run seed:products` (see the script for
@@ -8,7 +9,11 @@ import type { Product } from "../../src/catalogue/product";
 
 const img = (path: string) => `https://i.ibb.co/${path}`;
 
-export const products: Product[] = [
+// What's edited by hand. Sizes come from the category, starting stock from
+// ./stock.ts.
+type CatalogueEntry = Omit<Product, "sizes" | "stock">;
+
+const catalogue: CatalogueEntry[] = [
   // Hats
   {
     id: 1,
@@ -334,3 +339,8 @@ export const products: Product[] = [
       "A short-sleeve button-up shirt in deep burgundy with a fine polka dot. Smart enough for dinner and easy with jeans.",
   },
 ];
+
+export const products: Product[] = catalogue.map((entry) => {
+  const sizes = [...SIZES_BY_CATEGORY[entry.category]];
+  return { ...entry, sizes, stock: initialStock({ id: entry.id, sizes }) };
+});

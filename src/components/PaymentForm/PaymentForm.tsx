@@ -161,7 +161,11 @@ function CheckoutForm({ onComplete }: PaymentFormProps): ReactElement {
           },
           // Only ids and quantities: the server prices the order itself.
           body: JSON.stringify({
-            items: cartItems.map(({ id, quantity }) => ({ id, quantity })),
+            items: cartItems.map(({ id, size, quantity }) => ({
+              id,
+              size,
+              quantity,
+            })),
           }),
         },
       );

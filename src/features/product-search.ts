@@ -1,4 +1,10 @@
-import { CATEGORIES, type Product } from "../catalogue/product";
+import {
+  CATEGORIES,
+  ONE_SIZE,
+  SIZES_BY_CATEGORY,
+  stockOf,
+  type Product,
+} from "../catalogue/product";
 
 export const SORT_OPTIONS = [
   { value: "featured", label: "Featured" },
@@ -41,9 +47,27 @@ const compare: Record<SortOption, (a: Product, b: Product) => number> = {
   name: (a, b) => a.name.localeCompare(b.name, "en"),
 };
 
+// Every size the shop uses, smallest first: clothing, then shoes. "One size"
+// isn't something to filter by.
+const SIZE_ORDER = [...new Set(Object.values(SIZES_BY_CATEGORY).flat())].filter(
+  (size) => size !== ONE_SIZE,
+);
+
+// The sizes worth offering in the filter for these products.
+export const sizeOptions = (products: Product[]): string[] =>
+  SIZE_ORDER.filter((size) =>
+    products.some((product) => product.sizes.includes(size)),
+  );
+
+// In stock in that size right now.
+export const hasSizeInStock = (product: Product, size: string): boolean =>
+  stockOf(product, size) > 0;
+
 export interface ProductFilters {
   query?: string;
   category?: string;
+  // Only products with this size in stock.
+  size?: string;
   sort?: SortOption;
 }
 
@@ -51,10 +75,11 @@ export interface ProductFilters {
 // in the chosen order. Pure, so the URL is the only state it needs.
 export function filterProducts(
   products: Product[],
-  { query = "", category, sort = "featured" }: ProductFilters,
+  { query = "", category, size, sort = "featured" }: ProductFilters,
 ): Product[] {
   return products
     .filter((product) => !category || product.category === category)
+    .filter((product) => !size || hasSizeInStock(product, size))
     .filter((product) => matchesQuery(product, query))
     .sort(compare[sort]);
 }

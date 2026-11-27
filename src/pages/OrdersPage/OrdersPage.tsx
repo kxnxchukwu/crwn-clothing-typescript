@@ -8,6 +8,7 @@ import {
 } from "../../features/user-slice";
 import { Order, useOrders } from "../../features/use-orders";
 import { formatPrice } from "../../utils/format";
+import { ONE_SIZE } from "../../catalogue/product";
 
 const dateFormat = new Intl.DateTimeFormat("en-IE", { dateStyle: "medium" });
 
@@ -90,7 +91,10 @@ function OrderCard({ order }: { order: Order }): ReactElement {
       </div>
       <ul className="divide-y divide-line px-5">
         {order.items.map((item) => (
-          <li key={item.id} className="flex items-center gap-4 py-4">
+          <li
+            key={`${item.id}-${item.size ?? ""}`}
+            className="flex items-center gap-4 py-4"
+          >
             <div className="h-20 w-16 shrink-0 overflow-hidden rounded-md bg-surface">
               <img
                 src={item.imageUrl}
@@ -102,6 +106,9 @@ function OrderCard({ order }: { order: Order }): ReactElement {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{item.name}</p>
               <p className="mt-0.5 text-sm text-muted">
+                {item.size && item.size !== ONE_SIZE && (
+                  <>Size {item.size} · </>
+                )}
                 {item.quantity} × {formatPrice(item.price)}
               </p>
             </div>

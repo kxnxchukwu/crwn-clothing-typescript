@@ -114,7 +114,7 @@ export default function CartDrawer(): ReactElement {
           <>
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {cartItems.map((item) => (
-                <CartLine key={item.id} item={item} />
+                <CartLine key={`${item.id}-${item.size}`} item={item} />
               ))}
             </ul>
 

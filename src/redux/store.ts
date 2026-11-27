@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import {
+  createMigrate,
   persistStore,
   createTransform,
   persistReducer,
@@ -25,9 +26,29 @@ const cartDropdownClosed = createTransform(
   { whitelist: ["cart"] },
 );
 
+// Version 1 added sizes to cart lines. Lines saved before that can't be
+// bought any more (the server needs a size), so they're dropped once.
+export const migrations = {
+  1: (state: unknown) => {
+    const saved = state as { cart?: { cartItems?: { size?: unknown }[] } };
+    if (!saved?.cart?.cartItems) return state as never;
+    return {
+      ...saved,
+      cart: {
+        ...saved.cart,
+        cartItems: saved.cart.cartItems.filter(
+          (line) => typeof line.size === "string",
+        ),
+      },
+    } as never;
+  },
+};
+
 const persistedReducer = persistReducer<RootState>(
   {
     key: "root",
+    version: 1,
+    migrate: createMigrate(migrations),
     storage,
     whitelist: ["cart", "theme"],
     transforms: [cartDropdownClosed],

@@ -4,6 +4,8 @@
 //   npm run seed:products                # apply it
 //
 // Safe to run again: unchanged products are skipped and nothing is deleted.
+// Stock counts are only set for sizes that don't have one yet, so a rerun
+// never resets what sales have used up.
 // Needs FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY (read from .env.local).
 import { existsSync } from "node:fs";
 import { products } from "./data/products";
@@ -60,7 +62,8 @@ if (dryRun) {
   // One batch (max 500 writes) so a failure leaves nothing half-applied.
   const batch = admin.db.batch();
   for (const product of writes) {
-    batch.set(productsRef.doc(String(product.id)), product);
+    // Merge, so stock counts already in Firestore stay as they are.
+    batch.set(productsRef.doc(String(product.id)), product, { merge: true });
   }
   await batch.commit();
   console.log(`Wrote ${writes.length} products.`);

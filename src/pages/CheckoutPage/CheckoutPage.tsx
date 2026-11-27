@@ -60,7 +60,7 @@ export default function CheckoutPage(): ReactElement {
           </h2>
           <ul className="divide-y divide-line border-y border-line">
             {cartItems.map((item) => (
-              <CartLine key={item.id} item={item} />
+              <CartLine key={`${item.id}-${item.size}`} item={item} />
             ))}
           </ul>
           <Link

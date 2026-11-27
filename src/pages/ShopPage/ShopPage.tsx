@@ -12,6 +12,7 @@ import {
 import {
   filterProducts,
   parseSort,
+  sizeOptions,
   SORT_OPTIONS,
   type SortOption,
 } from "../../features/product-search";
@@ -26,8 +27,8 @@ import NotFound from "../../components/NotFound/NotFound";
 const SEARCH_DELAY_MS = 300;
 
 // /shop and /shop/:category. Everything that shapes the list lives in the
-// URL (?q= and ?sort=, plus the category in the path), so results can be
-// shared, bookmarked and stepped through with Back.
+// URL (?q=, ?size= and ?sort=, plus the category in the path), so results
+// can be shared, bookmarked and stepped through with Back.
 export default function ShopPage(): ReactElement {
   const dispatch = useAppDispatch();
   const { id } = useParams();
@@ -39,6 +40,7 @@ export default function ShopPage(): ReactElement {
   const category = id ? CATEGORIES.find((c) => c.id === id) : undefined;
   const urlQuery = searchParams.get("q") ?? "";
   const sort = parseSort(searchParams.get("sort"));
+  const size = searchParams.get("size") ?? "";
 
   // The box updates the list on every keystroke, but the URL only once
   // typing pauses (one history entry, not one per letter). When the URL
@@ -71,21 +73,45 @@ export default function ShopPage(): ReactElement {
       withParam(params, "sort", value === "featured" ? "" : value),
     );
 
-  const clearSearch = () => {
+  const setSize = (value: string) =>
+    setSearchParams((params) => withParam(params, "size", value));
+
+  const clearFilters = () => {
     setQuery("");
     setWrittenQuery("");
-    setSearchParams((params) => withParam(params, "q", ""), { replace: true });
+    setSearchParams(
+      (params) => withParam(withParam(params, "q", ""), "size", ""),
+      { replace: true },
+    );
   };
 
   const results = useMemo(
-    () => filterProducts(products, { query, category: category?.id, sort }),
-    [products, query, category, sort],
+    () =>
+      filterProducts(products, {
+        query,
+        category: category?.id,
+        size: size || undefined,
+        sort,
+      }),
+    [products, query, category, size, sort],
   );
+  // Sizes that products in this category come in. A size from a shared link
+  // stays listed even if this category doesn't have it, so the menu matches
+  // the URL.
+  const sizes = useMemo(() => {
+    const inScope = category
+      ? products.filter((product) => product.category === category.id)
+      : products;
+    const options = sizeOptions(inScope);
+    return size && !options.includes(size) ? [...options, size] : options;
+  }, [products, category, size]);
   // When a category has no matches, say whether the whole shop does.
   const matchesElsewhere = useMemo(
     () =>
-      category && query.trim() ? filterProducts(products, { query }).length : 0,
-    [products, query, category],
+      category && (query.trim() || size)
+        ? filterProducts(products, { query, size: size || undefined }).length
+        : 0,
+    [products, query, size, category],
   );
 
   const title = category?.title ?? "Shop";
@@ -129,7 +155,7 @@ export default function ShopPage(): ReactElement {
         <p className="mt-2 text-sm text-muted" aria-live="polite">
           {isLoading
             ? "Loading products…"
-            : resultSummary(results.length, trimmedQuery)}
+            : resultSummary(results.length, trimmedQuery, size)}
         </p>
       </header>
 
@@ -183,22 +209,51 @@ export default function ShopPage(): ReactElement {
             />
           </form>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="shop-sort" className="shrink-0 text-sm text-muted">
-              Sort by
-            </label>
-            <select
-              id="shop-sort"
-              value={sort}
-              onChange={(event) => setSort(parseSort(event.target.value))}
-              className="h-10 w-full rounded-md border border-line bg-background px-3 text-sm focus:border-foreground focus:outline-none sm:w-auto"
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          <div className="flex gap-3">
+            {sizes.length > 0 && (
+              <div className="flex flex-1 items-center gap-2">
+                <label
+                  htmlFor="shop-size"
+                  className="shrink-0 text-sm text-muted"
+                >
+                  Size
+                </label>
+                <select
+                  id="shop-size"
+                  value={size}
+                  onChange={(event) => setSize(event.target.value)}
+                  className={selectClass}
+                >
+                  <option value="">Any</option>
+                  {sizes.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex flex-1 items-center gap-2">
+              <label
+                htmlFor="shop-sort"
+                className="shrink-0 text-sm text-muted"
+              >
+                Sort by
+              </label>
+              <select
+                id="shop-sort"
+                value={sort}
+                onChange={(event) => setSort(parseSort(event.target.value))}
+                className={selectClass}
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -222,13 +277,17 @@ export default function ShopPage(): ReactElement {
         <EmptyState
           title={
             trimmedQuery
-              ? `No products match “${trimmedQuery}”`
-              : "Nothing here yet"
+              ? `No products match “${trimmedQuery}”${size ? ` in size ${size}` : ""}`
+              : size
+                ? `Nothing in size ${size} here`
+                : "Nothing here yet"
           }
           message={
             matchesElsewhere > 0
               ? `There ${matchesElsewhere === 1 ? "is 1 match" : `are ${matchesElsewhere} matches`} in other categories.`
-              : "Try a different word, or browse everything."
+              : size
+                ? "Try another size, or browse everything."
+                : "Try a different word, or browse everything."
           }
         >
           {matchesElsewhere > 0 && (
@@ -236,13 +295,13 @@ export default function ShopPage(): ReactElement {
               Search all products
             </Link>
           )}
-          {trimmedQuery && (
+          {(trimmedQuery || size) && (
             <button
               type="button"
-              onClick={clearSearch}
+              onClick={clearFilters}
               className={secondaryButton}
             >
-              Clear search
+              {size ? "Clear filters" : "Clear search"}
             </button>
           )}
         </EmptyState>
@@ -265,10 +324,14 @@ function withParam(params: URLSearchParams, key: string, value: string) {
   return next;
 }
 
-function resultSummary(count: number, query: string) {
+function resultSummary(count: number, query: string, size: string) {
   const products = `${count} ${count === 1 ? "product" : "products"}`;
-  return query ? `${products} for “${query}”` : products;
+  const inSize = size ? ` in size ${size}` : "";
+  return query ? `${products} for “${query}”${inSize}` : `${products}${inSize}`;
 }
+
+const selectClass =
+  "h-10 w-full rounded-md border border-line bg-background px-3 text-sm focus:border-foreground focus:outline-none sm:w-auto";
 
 const primaryButton =
   "inline-flex h-10 items-center rounded-md bg-foreground px-5 text-sm font-medium text-background transition-opacity hover:opacity-90";
