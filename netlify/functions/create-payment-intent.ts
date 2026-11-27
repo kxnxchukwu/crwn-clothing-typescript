@@ -62,7 +62,9 @@ const handler: Handler = async (event) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: total.value,
       currency: "eur",
-      payment_method_types: ["card"],
+      // Whatever is switched on in the Stripe dashboard (cards, wallets,
+      // local methods), matching the Payment Element in the browser.
+      automatic_payment_methods: { enabled: true },
       metadata: {
         items: lines.value
           .map(({ id, quantity }) => `${id}x${quantity}`)

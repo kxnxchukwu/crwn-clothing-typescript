@@ -36,7 +36,7 @@ test("a shopper can find a product and reach checkout", async ({ page }) => {
   await expect(page.getByText("Subtotal (2 items)")).toBeVisible();
   // CI builds have no Stripe key, so the form says payments aren't set up.
   await expect(
-    page.getByText(/Card payments aren't set up|Card details/).first(),
+    page.getByText(/Payments aren't set up|Payment details/).first(),
   ).toBeVisible();
 });
 

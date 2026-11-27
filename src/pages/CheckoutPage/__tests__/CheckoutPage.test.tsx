@@ -11,12 +11,21 @@ vi.mock(
   "../../../firebase/firebase.utils",
   async () => (await import("../../../test/firebase-mock")).firebaseUtilsMock,
 );
-// The payment form has its own tests; here it just reports success.
+// The payment form has its own tests; here it just reports the outcome.
 vi.mock("../../../components/PaymentForm/PaymentForm", () => ({
-  default: ({ onSuccess }: { onSuccess: (amount: number) => void }) => (
-    <button type="button" onClick={() => onSuccess(175)}>
-      Simulate payment
-    </button>
+  default: ({
+    onComplete,
+  }: {
+    onComplete: (amount: number, outcome: string) => void;
+  }) => (
+    <>
+      <button type="button" onClick={() => onComplete(175, "succeeded")}>
+        Simulate payment
+      </button>
+      <button type="button" onClick={() => onComplete(175, "processing")}>
+        Simulate slow payment
+      </button>
+    </>
   ),
 }));
 
@@ -64,5 +73,17 @@ describe("CheckoutPage", () => {
     expect(
       screen.queryByRole("link", { name: "View your orders" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("says when the bank is still confirming the payment", async () => {
+    const { user } = renderWithProviders(<CheckoutPage />, {
+      state: { cart },
+    });
+    await user.click(
+      screen.getByRole("button", { name: "Simulate slow payment" }),
+    );
+    expect(
+      screen.getByText(/Your payment of €175 is being confirmed by your bank/),
+    ).toBeInTheDocument();
   });
 });

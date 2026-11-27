@@ -1,3 +1,4 @@
+import { useEffect, type ReactNode } from "react";
 import { screen } from "@testing-library/react";
 import PaymentForm from "../PaymentForm";
 import {
@@ -10,7 +11,10 @@ import { firebaseUtilsMock } from "../../../test/firebase-mock";
 
 const stripe = vi.hoisted(() => ({
   configured: true,
-  confirmCardPayment: vi.fn(),
+  confirmPayment: vi.fn(),
+  submit: vi.fn(),
+  elementsOptions: undefined as unknown,
+  paymentElementOptions: undefined as unknown,
 }));
 
 vi.mock(
@@ -23,9 +27,29 @@ vi.mock("../../../stripe/stripe.utils", () => ({
   },
 }));
 vi.mock("@stripe/react-stripe-js", () => ({
-  CardElement: () => <div data-testid="card-element" />,
-  useStripe: () => ({ confirmCardPayment: stripe.confirmCardPayment }),
-  useElements: () => ({ getElement: () => ({ card: true }) }),
+  Elements: ({
+    options,
+    children,
+  }: {
+    options: unknown;
+    children: ReactNode;
+  }) => {
+    stripe.elementsOptions = options;
+    return <>{children}</>;
+  },
+  PaymentElement: ({
+    options,
+    onReady,
+  }: {
+    options: unknown;
+    onReady: () => void;
+  }) => {
+    stripe.paymentElementOptions = options;
+    useEffect(() => onReady(), [onReady]);
+    return <div data-testid="payment-element" />;
+  },
+  useStripe: () => ({ confirmPayment: stripe.confirmPayment }),
+  useElements: () => ({ submit: stripe.submit }),
 }));
 
 const fetchMock = vi.fn();
@@ -37,11 +61,19 @@ const respond = (status: number, body: unknown) =>
 
 const cart = { cartItems: [{ ...hat, quantity: 2 }, jacket], hidden: true };
 
-const renderForm = (onSuccess = vi.fn(), signedIn = false) => {
-  const result = renderWithProviders(<PaymentForm onSuccess={onSuccess} />, {
-    state: { cart, ...(signedIn && { user: signedInUser }) },
+const renderForm = ({
+  signedIn = false,
+  theme = "light" as const,
+}: { signedIn?: boolean; theme?: "light" | "dark" } = {}) => {
+  const onComplete = vi.fn();
+  const result = renderWithProviders(<PaymentForm onComplete={onComplete} />, {
+    state: {
+      cart,
+      theme: { theme },
+      ...(signedIn && { user: signedInUser }),
+    },
   });
-  return { ...result, onSuccess };
+  return { ...result, onComplete };
 };
 
 const pay = (user: ReturnType<typeof renderForm>["user"]) =>
@@ -52,6 +84,7 @@ describe("PaymentForm", () => {
     vi.clearAllMocks();
     vi.stubGlobal("fetch", fetchMock);
     stripe.configured = true;
+    stripe.submit.mockResolvedValue({});
     firebaseUtilsMock.auth.currentUser = null;
   });
 
@@ -61,14 +94,68 @@ describe("PaymentForm", () => {
     stripe.configured = false;
     renderForm();
     expect(
-      screen.getByText(/Card payments aren't set up in this environment/),
+      screen.getByText(/Payments aren't set up in this environment/),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Pay/ })).toBeNull();
   });
 
-  it("shows the cart total on the pay button", () => {
+  it("sets up a euro payment for the cart total in cents", () => {
     renderForm();
+    expect(stripe.elementsOptions).toMatchObject({
+      mode: "payment",
+      currency: "eur",
+      amount: 17500,
+      appearance: { theme: "stripe" },
+    });
     expect(screen.getByRole("button", { name: "Pay €175" })).toBeEnabled();
+  });
+
+  it("matches the dark theme", () => {
+    renderForm({ theme: "dark" });
+    expect(stripe.elementsOptions).toMatchObject({
+      appearance: {
+        theme: "night",
+        variables: { colorBackground: "#0a0a0a" },
+      },
+    });
+  });
+
+  it("starts guests in Ireland", () => {
+    renderForm();
+    expect(stripe.paymentElementOptions).toEqual({
+      layout: "tabs",
+      defaultValues: { billingDetails: { address: { country: "IE" } } },
+    });
+  });
+
+  it("prefills a signed-in shopper's name and email", () => {
+    renderForm({ signedIn: true });
+    expect(stripe.paymentElementOptions).toMatchObject({
+      defaultValues: {
+        billingDetails: {
+          name: "Ada Lovelace",
+          email: "ada@example.test",
+          address: { country: "IE" },
+        },
+      },
+    });
+  });
+
+  it("stops at incomplete fields without starting a payment", async () => {
+    stripe.submit.mockResolvedValue({
+      error: {
+        type: "validation_error",
+        message: "Your card number is incomplete.",
+      },
+    });
+    const { user } = renderForm();
+
+    await pay(user);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your card number is incomplete.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("sends only item ids and quantities, never prices", async () => {
@@ -93,7 +180,7 @@ describe("PaymentForm", () => {
       getIdToken: async () => "id-token",
     };
     respond(400, { error: "Nope." });
-    const { user } = renderForm(vi.fn(), true);
+    const { user } = renderForm({ signedIn: true });
 
     await pay(user);
 
@@ -112,7 +199,7 @@ describe("PaymentForm", () => {
       "An item in your cart is no longer available. Please try again.",
     );
     expect(screen.getByRole("button", { name: "Pay €175" })).toBeEnabled();
-    expect(stripe.confirmCardPayment).not.toHaveBeenCalled();
+    expect(stripe.confirmPayment).not.toHaveBeenCalled();
   });
 
   it("recovers when the payment service can't be reached", async () => {
@@ -129,36 +216,65 @@ describe("PaymentForm", () => {
 
   it("shows Stripe's message when the card is declined", async () => {
     respond(200, { clientSecret: "pi_secret", amount: 17500 });
-    stripe.confirmCardPayment.mockResolvedValue({
-      error: { message: "Your card was declined." },
+    stripe.confirmPayment.mockResolvedValue({
+      error: { type: "card_error", message: "Your card was declined." },
     });
-    const { store, user, onSuccess } = renderForm();
+    const { store, user, onComplete } = renderForm();
 
     await pay(user);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Your card was declined.",
     );
-    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onComplete).not.toHaveBeenCalled();
     expect(store.getState().cart.cartItems).toHaveLength(2);
   });
 
-  it("reports the amount the server charged and clears the cart", async () => {
+  it("hides Stripe's internal errors behind a plain message", async () => {
     respond(200, { clientSecret: "pi_secret", amount: 17500 });
-    stripe.confirmCardPayment.mockResolvedValue({
-      paymentIntent: { status: "succeeded" },
+    stripe.confirmPayment.mockResolvedValue({
+      error: { type: "api_error", message: "Internal: something odd" },
     });
-    const { store, user, onSuccess } = renderForm(vi.fn(), true);
+    const { user } = renderForm();
 
     await pay(user);
 
-    expect(stripe.confirmCardPayment).toHaveBeenCalledWith("pi_secret", {
-      payment_method: {
-        card: { card: true },
-        billing_details: { name: "Ada Lovelace" },
-      },
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your payment didn't go through. Please try again.",
+    );
+  });
+
+  it("confirms with a return URL, then reports the charge and clears the cart", async () => {
+    respond(200, { clientSecret: "pi_secret", amount: 17500 });
+    stripe.confirmPayment.mockResolvedValue({
+      paymentIntent: { status: "succeeded" },
     });
-    expect(onSuccess).toHaveBeenCalledWith(175);
+    const { store, user, onComplete } = renderForm({ signedIn: true });
+
+    await pay(user);
+
+    expect(stripe.confirmPayment).toHaveBeenCalledWith({
+      elements: { submit: stripe.submit },
+      clientSecret: "pi_secret",
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout/complete`,
+      },
+      redirect: "if_required",
+    });
+    expect(onComplete).toHaveBeenCalledWith(175, "succeeded");
+    expect(store.getState().cart.cartItems).toEqual([]);
+  });
+
+  it("treats a payment still clearing as placed", async () => {
+    respond(200, { clientSecret: "pi_secret", amount: 17500 });
+    stripe.confirmPayment.mockResolvedValue({
+      paymentIntent: { status: "processing" },
+    });
+    const { store, user, onComplete } = renderForm();
+
+    await pay(user);
+
+    expect(onComplete).toHaveBeenCalledWith(175, "processing");
     expect(store.getState().cart.cartItems).toEqual([]);
   });
 });

@@ -86,6 +86,7 @@ describe("create-payment-intent", () => {
       expect.objectContaining({
         amount: 17500,
         currency: "eur",
+        automatic_payment_methods: { enabled: true },
         metadata: { items: "1x2,18x1", userId: "" },
       }),
     );
