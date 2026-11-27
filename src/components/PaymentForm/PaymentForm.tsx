@@ -1,6 +1,11 @@
 import { FormEvent, ReactElement, useState } from "react";
-import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { StripeCardElementOptions } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
+import type { Appearance, StripeError } from "@stripe/stripe-js";
 import { useSelector } from "react-redux";
 import { Info, LoaderCircle, Lock } from "lucide-react";
 import { useAppDispatch } from "../../redux/hooks";
@@ -15,51 +20,132 @@ import { stripePromise } from "../../stripe/stripe.utils";
 import { auth } from "../../firebase/firebase.utils";
 import { formatPrice } from "../../utils/format";
 
-// The card field renders in Stripe's iframe, so it can't read our CSS
+// Where Stripe sends shoppers back after a redirect-based payment method
+// (a bank app, iDEAL, a 3-D Secure page on another site).
+export const RETURN_PATH = "/checkout/complete";
+
+// The payment fields render in Stripe's iframe, so they can't read our CSS
 // variables; mirror the light/dark token values here.
-const cardColors = {
-  light: { text: "#0a0a0a", placeholder: "#737373", danger: "#dc2626" },
-  dark: { text: "#fafafa", placeholder: "#a3a3a3", danger: "#f87171" },
+const tokens = {
+  light: {
+    theme: "stripe",
+    background: "#ffffff",
+    text: "#0a0a0a",
+    muted: "#737373",
+    line: "#e5e5e5",
+    danger: "#dc2626",
+  },
+  dark: {
+    theme: "night",
+    background: "#0a0a0a",
+    text: "#fafafa",
+    muted: "#a3a3a3",
+    line: "#262626",
+    danger: "#f87171",
+  },
+} as const;
+
+const appearanceFor = (mode: "light" | "dark"): Appearance => {
+  const t = tokens[mode];
+  return {
+    theme: t.theme,
+    variables: {
+      colorPrimary: t.text,
+      colorBackground: t.background,
+      colorText: t.text,
+      colorTextSecondary: t.muted,
+      colorTextPlaceholder: t.muted,
+      colorDanger: t.danger,
+      fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+      fontSizeBase: "15px",
+      borderRadius: "6px",
+    },
+    rules: {
+      ".Input": { borderColor: t.line, boxShadow: "none" },
+      ".Input:focus": { borderColor: t.text, boxShadow: "none" },
+      ".Tab": { borderColor: t.line, boxShadow: "none" },
+      ".Tab--selected": { borderColor: t.text, boxShadow: "none" },
+    },
+  };
 };
 
+export type PaymentOutcome = "succeeded" | "processing";
+
 interface PaymentFormProps {
-  onSuccess: (amount: number) => void;
+  // The amount the server charged (euros), and whether it has settled yet.
+  onComplete: (amount: number, outcome: PaymentOutcome) => void;
 }
 
-export default function PaymentForm({
-  onSuccess,
-}: PaymentFormProps): ReactElement {
+// Stripe's Payment Element: card, Apple Pay, Google Pay and whatever else is
+// switched on in the Stripe dashboard. It renders before a PaymentIntent
+// exists ("deferred intent"), so one is only created when the shopper pays.
+export default function PaymentForm(props: PaymentFormProps): ReactElement {
+  const total = useSelector(selectCartTotal);
+  const theme = useSelector(selectTheme) === "dark" ? "dark" : "light";
+
+  if (!stripePromise) {
+    return (
+      <p className="rounded-md border border-line bg-background p-4 text-sm text-muted">
+        Payments aren&apos;t set up in this environment. Add
+        VITE_STRIPE_PUBLISHABLE_KEY to enable them.
+      </p>
+    );
+  }
+
+  return (
+    <Elements
+      stripe={stripePromise}
+      options={{
+        mode: "payment",
+        currency: "eur",
+        // Shown in wallet sheets; the server still sets the real amount.
+        amount: Math.round(total * 100),
+        appearance: appearanceFor(theme),
+        fonts: [
+          {
+            cssSrc:
+              "https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap",
+          },
+        ],
+      }}
+    >
+      <CheckoutForm {...props} />
+    </Elements>
+  );
+}
+
+// Only card and validation errors are safe and useful to show as they are.
+const messageFor = (error: StripeError) =>
+  (error.type === "card_error" || error.type === "validation_error") &&
+  error.message
+    ? error.message
+    : "Your payment didn't go through. Please try again.";
+
+function CheckoutForm({ onComplete }: PaymentFormProps): ReactElement {
   const dispatch = useAppDispatch();
   const stripe = useStripe();
   const elements = useElements();
   const amount = useSelector(selectCartTotal);
   const cartItems = useSelector(selectCartItems);
   const currentUser = useSelector(selectCurrentUser);
-  const theme = useSelector(selectTheme) === "dark" ? "dark" : "light";
+  const [isReady, setIsReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const cardOptions: StripeCardElementOptions = {
-    hidePostalCode: true,
-    style: {
-      base: {
-        color: cardColors[theme].text,
-        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-        fontSize: "15px",
-        "::placeholder": { color: cardColors[theme].placeholder },
-      },
-      invalid: { color: cardColors[theme].danger },
-    },
-  };
-
   const paymentHandler = async (event: FormEvent) => {
     event.preventDefault();
-    const card = elements?.getElement(CardElement);
-    if (!stripe || !card) return;
+    if (!stripe || !elements) return;
 
     setIsProcessing(true);
     setError(null);
     try {
+      // Check the fields first, so an incomplete form never creates a payment.
+      const submitted = await elements.submit();
+      if (submitted.error) {
+        setError(messageFor(submitted.error));
+        return;
+      }
+
       // Signed-in shoppers send their ID token so the order is saved to them.
       const idToken = await auth.currentUser?.getIdToken();
       const response = await fetch(
@@ -86,25 +172,30 @@ export default function PaymentForm({
         );
         return;
       }
-      const { clientSecret } = data;
       const chargedAmount =
         typeof data.amount === "number" ? data.amount / 100 : amount;
 
-      const result = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card,
-          billing_details: { name: currentUser?.displayName ?? "Guest" },
+      // Redirect-based methods leave the page here and come back to
+      // RETURN_PATH; cards and wallets resolve in place.
+      const result = await stripe.confirmPayment({
+        elements,
+        clientSecret: data.clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}${RETURN_PATH}`,
         },
+        redirect: "if_required",
       });
 
       if (result.error) {
-        setError(
-          result.error.message ??
-            "Your payment didn't go through. Please check your card details.",
-        );
-      } else if (result.paymentIntent.status === "succeeded") {
-        onSuccess(chargedAmount);
+        setError(messageFor(result.error));
+      } else if (
+        result.paymentIntent.status === "succeeded" ||
+        result.paymentIntent.status === "processing"
+      ) {
+        onComplete(chargedAmount, result.paymentIntent.status);
         dispatch(clearCart());
+      } else {
+        setError("Your payment didn't go through. Please try again.");
       }
     } catch {
       setError("We couldn't reach the payment service. Please try again.");
@@ -112,15 +203,6 @@ export default function PaymentForm({
       setIsProcessing(false);
     }
   };
-
-  if (!stripePromise) {
-    return (
-      <p className="rounded-md border border-line bg-background p-4 text-sm text-muted">
-        Card payments aren't set up in this environment. Add
-        VITE_STRIPE_PUBLISHABLE_KEY to enable them.
-      </p>
-    );
-  }
 
   return (
     <form onSubmit={paymentHandler} className="space-y-4" noValidate>
@@ -131,25 +213,28 @@ export default function PaymentForm({
           <span className="font-medium text-foreground tabular-nums">
             4242 4242 4242 4242
           </span>
-          , expiry 12/29, CVC 123.
+          , any future expiry and any CVC.
         </p>
       </div>
 
-      <div>
-        <label
-          htmlFor="card-element"
-          className="mb-2 block text-sm font-medium"
-        >
-          Card details
-        </label>
-        <div className="rounded-md border border-line bg-background px-3 py-3.5 focus-within:border-foreground">
-          <CardElement
-            id="card-element"
-            options={cardOptions}
-            onChange={() => setError(null)}
-          />
-        </div>
-      </div>
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium">Payment details</legend>
+        <PaymentElement
+          options={{
+            layout: "tabs",
+            defaultValues: currentUser
+              ? {
+                  billingDetails: {
+                    name: currentUser.displayName,
+                    email: currentUser.email,
+                  },
+                }
+              : undefined,
+          }}
+          onReady={() => setIsReady(true)}
+          onChange={() => setError(null)}
+        />
+      </fieldset>
 
       {error && (
         <p role="alert" className="text-sm text-danger">
@@ -159,7 +244,7 @@ export default function PaymentForm({
 
       <button
         type="submit"
-        disabled={!stripe || isProcessing}
+        disabled={!stripe || !isReady || isProcessing}
         className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         {isProcessing ? (

@@ -1,15 +1,17 @@
 import { ReactElement, useState } from "react";
 import { Link } from "react-router";
 import { useSelector } from "react-redux";
-import { CircleCheck, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import {
   selectCartItems,
   selectCartItemsCount,
   selectCartTotal,
 } from "../../features/cart-slice";
-import { selectCurrentUser } from "../../features/user-slice";
 import CartLine from "../../components/CartLine/CartLine";
-import PaymentForm from "../../components/PaymentForm/PaymentForm";
+import PaymentForm, {
+  type PaymentOutcome,
+} from "../../components/PaymentForm/PaymentForm";
+import OrderConfirmation from "../../components/OrderConfirmation/OrderConfirmation";
 import { formatPrice } from "../../utils/format";
 
 const primaryLinkClass =
@@ -19,34 +21,13 @@ export default function CheckoutPage(): ReactElement {
   const total = useSelector(selectCartTotal);
   const cartItems = useSelector(selectCartItems);
   const itemCount = useSelector(selectCartItemsCount);
-  const currentUser = useSelector(selectCurrentUser);
-  const [paidAmount, setPaidAmount] = useState<number | null>(null);
+  const [payment, setPayment] = useState<{
+    amount: number;
+    outcome: PaymentOutcome;
+  } | null>(null);
 
-  if (paidAmount !== null) {
-    return (
-      <div className="mx-auto flex max-w-md flex-col items-center py-16 text-center">
-        <CircleCheck className="size-12" aria-hidden="true" />
-        <h1 className="mt-6 text-3xl font-semibold tracking-tight">
-          Thank you for your order
-        </h1>
-        <p className="mt-3 text-muted">
-          Your payment of {formatPrice(paidAmount)} went through.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link to="/shop" className={primaryLinkClass}>
-            Continue shopping
-          </Link>
-          {currentUser && (
-            <Link
-              to="/orders"
-              className="inline-flex h-11 items-center justify-center rounded-md border border-line px-6 text-sm font-medium transition-colors hover:bg-surface"
-            >
-              View your orders
-            </Link>
-          )}
-        </div>
-      </div>
-    );
+  if (payment) {
+    return <OrderConfirmation {...payment} />;
   }
 
   if (cartItems.length === 0) {
@@ -112,7 +93,9 @@ export default function CheckoutPage(): ReactElement {
           <p className="mt-1 text-right text-xs text-muted">VAT included.</p>
 
           <div className="mt-8">
-            <PaymentForm onSuccess={setPaidAmount} />
+            <PaymentForm
+              onComplete={(amount, outcome) => setPayment({ amount, outcome })}
+            />
           </div>
         </section>
       </div>

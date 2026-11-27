@@ -24,6 +24,9 @@ const SignInAndSignUpPage = lazy(
   () => import("./pages/SignInAndSignUpPage/SignInAndSignUpPage"),
 );
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage/CheckoutPage"));
+const CheckoutCompletePage = lazy(
+  () => import("./pages/CheckoutCompletePage/CheckoutCompletePage"),
+);
 const OrdersPage = lazy(() => import("./pages/OrdersPage/OrdersPage"));
 const ShopPage = lazy(() => import("./pages/ShopPage/ShopPage"));
 
@@ -79,6 +82,10 @@ const App = () => {
                   </Route>
                 </Route>
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route
+                  path="/checkout/complete"
+                  element={<CheckoutCompletePage />}
+                />
                 <Route path="/orders" element={<OrdersPage />} />
                 <Route
                   path="/signin"
